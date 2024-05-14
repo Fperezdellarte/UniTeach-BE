@@ -1,6 +1,6 @@
 const { httpError } = require("../helpers/handleError")
 const { createUser, getAllUsers, modifyUser, deleteUser, getUserById } = require('../models/userModels'); // Importa la función createUser del modelo
-
+const {checkFieldsExistence} =require('../services/userService')
 const getUsers = async (req, res) =>{
     try {
         getAllUsers((err, users) => {
@@ -37,19 +37,32 @@ const getUser = async (req, res) =>{
 const createUserController = async (req, res) => {
     try {
         const userData = req.body;
-        
-        createUser(userData, (err, result) => {
+        checkFieldsExistence(userData, (err, existingFields) => {
             if (err) {
-                httpError(res, err);
+                console.error('Error:', err);
+                httpError(res, err); // Enviar un error HTTP al cliente si ocurre un error en la consulta
+                return;
+            }
+
+            if (existingFields.length > 0) {
+                // Enviar una respuesta al cliente indicando qué campos ya existen
+                const message = existingFields.map(field => `${field} ya existe en la base de datos.`).join(' ');
+                res.status(400).json({ message });
             } else {
-                res.status(201).json({ message: "Usuario creado correctamente", user: result });
+                createUser(userData, (err, result) => {
+                    if (err) {
+                        httpError(res, err);
+                    } else {
+                        res.status(201).json({ message: "Usuario creado correctamente", user: result });
+                    }
+                });
             }
         });
     } catch (error) {
-        
         httpError(res, error);
     }
-}
+};
+
 
 
 const updateUser = async (req, res) =>{
