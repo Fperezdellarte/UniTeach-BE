@@ -7,7 +7,7 @@ const { dbConnect } = require('../../config/mysql');
 const createUser = (userData, callback) => {
     const connection = dbConnect();
 
-    const query = "INSERT INTO Users (Username, Password, Name, DNI, Legajo, TypeOfUser, Mail, Phone, University) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    const query = "INSERT INTO users (Username, Password, Name, DNI, Legajo, TypeOfUser, Mail, Phone, University) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
     const values = [
         userData.Username,
         userData.Password,
@@ -35,7 +35,7 @@ const createUser = (userData, callback) => {
 const getAllUsers = (callback) => {
     const connection = dbConnect();
 
-    const query = "SELECT * FROM Users";
+    const query = "SELECT * FROM users";
 
     connection.query(query, (err, results) => {
         if (err) {
@@ -52,7 +52,7 @@ const getAllUsers = (callback) => {
 const getUserById = (userId, callback) => {
     const connection = dbConnect();
 
-    const query = "SELECT * FROM Users WHERE idUser = ?";
+    const query = "SELECT * FROM users WHERE idUser = ?";
 
     connection.query(query, [userId], (err, results) => {
         if (err) {
@@ -73,7 +73,7 @@ const getUserById = (userId, callback) => {
 const modifyUser = (userId, userData, callback) => {
     const connection = dbConnect();
     
-    let query = "UPDATE Users SET ";
+    let query = "UPDATE users SET ";
     const fields = Object.keys(userData);
     const setValues = fields.map(field => `${field} = ?`).join(', ');
     query += setValues + " WHERE idUser = ?";
@@ -96,7 +96,7 @@ const modifyUser = (userId, userData, callback) => {
 const deleteUser = (userId, callback) => {
     const connection = dbConnect();
 
-    const query = "DELETE FROM Users WHERE idUser = ?";
+    const query = "DELETE FROM users WHERE idUser = ?";
 
     connection.query(query, [userId], (err, result) => {
         if (err) {
