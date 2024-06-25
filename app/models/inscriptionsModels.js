@@ -1,4 +1,4 @@
-const { dbConnect } = require('../../config/mysql');
+const { dbConnect } = require('../../config/mysql2');
 
 const createInscription = (inscriptionData, callback) => {
     const connection = dbConnect();
