@@ -1,5 +1,5 @@
 const mysql = require('mysql2');
-const { dbConnect } = require('../../config/mysql2');
+const { dbConnect } = require('../../config/mysql');
 
 const createUserSubject = (userSubjectData, callback) => {
     const connection = dbConnect();

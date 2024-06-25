@@ -1,4 +1,4 @@
-const { dbConnect } = require('../../config/mysql2');
+const { dbConnect } = require('../../config/mysql');
 
 const createSubject = (subjectData, callback) => {
     const connection = dbConnect();
