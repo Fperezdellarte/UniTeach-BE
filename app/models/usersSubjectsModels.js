@@ -1,10 +1,10 @@
-const mysql = require('mysql');
+const mysql = require('mysql2');
 const { dbConnect } = require('../../config/mysql');
 
 const createUserSubject = (userSubjectData, callback) => {
     const connection = dbConnect();
 
-    const query = "INSERT INTO UsersSubjects (Users_idUser, Subjects_idSubjects) VALUES (?, ?)";
+    const query = "INSERT INTO userssubjects (Users_idUser, Subjects_idSubjects) VALUES (?, ?)";
     const values = [
         userSubjectData.Users_idUser,
         userSubjectData.Subjects_idSubjects
@@ -25,7 +25,7 @@ const createUserSubject = (userSubjectData, callback) => {
 const deleteUserSubject = (userId, subjectId, callback) => {
     const connection = dbConnect();
 
-    const query = "DELETE FROM UsersSubjects WHERE Users_idUser = ? AND Subjects_idSubjects = ?";
+    const query = "DELETE FROM userssubjects WHERE Users_idUser = ? AND Subjects_idSubjects = ?";
 
     connection.query(query, [userId, subjectId], (err, result) => {
         if (err) {
@@ -42,7 +42,7 @@ const deleteUserSubject = (userId, subjectId, callback) => {
 const getUserSubjects = (userId, callback) => {
     const connection = dbConnect();
 
-    const query = "SELECT * FROM UsersSubjects WHERE Users_idUser = ?";
+    const query = "SELECT * FROM userssubjects WHERE Users_idUser = ?";
 
     connection.query(query, [userId], (err, results) => {
         if (err) {

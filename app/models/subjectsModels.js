@@ -3,7 +3,7 @@ const { dbConnect } = require('../../config/mysql');
 const createSubject = (subjectData, callback) => {
     const connection = dbConnect();
 
-    const query = "INSERT INTO Subjects (Name, University) VALUES (?, ?)";
+    const query = "INSERT INTO subjects (Name, University) VALUES (?, ?)";
     const values = [
         subjectData.Name,
         subjectData.University
@@ -24,7 +24,7 @@ const createSubject = (subjectData, callback) => {
 const getAllSubjects = (callback) => {
     const connection = dbConnect();
 
-    const query = "SELECT * FROM Subjects";
+    const query = "SELECT * FROM subjects";
 
     connection.query(query, (err, results) => {
         if (err) {
@@ -41,7 +41,7 @@ const getAllSubjects = (callback) => {
 const getSubjectById = (subjectId, callback) => {
     const connection = dbConnect();
 
-    const query = "SELECT * FROM Subjects WHERE idSubjects = ?";
+    const query = "SELECT * FROM subjects WHERE idSubjects = ?";
 
     connection.query(query, [subjectId], (err, results) => {
         if (err) {
@@ -63,7 +63,7 @@ const getSubjectById = (subjectId, callback) => {
 const modifySubject = (subjectId, subjectData, callback) => {
     const connection = dbConnect();
     
-    let query = "UPDATE Subjects SET ";
+    let query = "UPDATE subjects SET ";
     const fields = Object.keys(subjectData);
     const setValues = fields.map(field => `${field} = ?`).join(', ');
     query += setValues + " WHERE idSubjects = ?";
@@ -86,7 +86,7 @@ const modifySubject = (subjectId, subjectData, callback) => {
 const deleteSubject = (subjectId, callback) => {
     const connection = dbConnect();
 
-    const query = "DELETE FROM Subjects WHERE idSubjects = ?";
+    const query = "DELETE FROM subjects WHERE idSubjects = ?";
 
     connection.query(query, [subjectId], (err, result) => {
         if (err) {

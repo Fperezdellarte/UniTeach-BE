@@ -3,7 +3,7 @@ const { dbConnect } = require('../../config/mysql');
 const createClass = (classData, callback) => {
     const connection = dbConnect();
     
-    const query = "INSERT INTO Classes (hour, date, Place, Subjects_idSubjects, Users_idCreator) VALUES (?, ?, ?, ?, ?)";
+    const query = "INSERT INTO classes (hour, date, Place, Subjects_idSubjects, Users_idCreator) VALUES (?, ?, ?, ?, ?)";
     const values = [
         classData.hour,
         classData.date,
@@ -27,7 +27,7 @@ const createClass = (classData, callback) => {
 const getAllClasses = (callback) => {
     const connection = dbConnect();
 
-    const query = "SELECT * FROM Classes";
+    const query = "SELECT * FROM classes";
 
     connection.query(query, (err, results) => {
         if (err) {
@@ -44,7 +44,7 @@ const getAllClasses = (callback) => {
 const getClassById = (classId, callback) => {
     const connection = dbConnect();
 
-    const query = "SELECT * FROM Classes WHERE idClasses = ?";
+    const query = "SELECT * FROM classes WHERE idClasses = ?";
 
     connection.query(query, [classId], (err, results) => {
         if (err) {
@@ -66,7 +66,7 @@ const getClassById = (classId, callback) => {
 const modifyClass = (classId, classData, callback) => {
     const connection = dbConnect();
     
-    let query = "UPDATE Classes SET ";
+    let query = "UPDATE classes SET ";
     const fields = Object.keys(classData);
     const setValues = fields.map(field => `${field} = ?`).join(', ');
     query += setValues + " WHERE idClasses = ?";
@@ -89,7 +89,7 @@ const modifyClass = (classId, classData, callback) => {
 const deleteClass = (classId, callback) => {
     const connection = dbConnect();
 
-    const query = "DELETE FROM Classes WHERE idClasses = ?";
+    const query = "DELETE FROM classes WHERE idClasses = ?";
 
     connection.query(query, [classId], (err, result) => {
         if (err) {

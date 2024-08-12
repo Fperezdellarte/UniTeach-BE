@@ -3,7 +3,7 @@ const { dbConnect } = require('../../config/mysql');
 const createInscription = (inscriptionData, callback) => {
     const connection = dbConnect();
 
-    const query = "INSERT INTO Inscription (Users_idUser, Classes_idClasses) VALUES (?, ?)";
+    const query = "INSERT INTO inscription (Users_idUser, Classes_idClasses) VALUES (?, ?)";
     const values = [
         inscriptionData.Users_idUser,
         inscriptionData.Classes_idClasses
@@ -24,7 +24,7 @@ const createInscription = (inscriptionData, callback) => {
 const getAllInscriptions = (callback) => {
     const connection = dbConnect();
 
-    const query = "SELECT * FROM Inscription";
+    const query = "SELECT * FROM inscription";
 
     connection.query(query, (err, results) => {
         if (err) {
@@ -41,7 +41,7 @@ const getAllInscriptions = (callback) => {
 const getInscriptionById = (inscriptionId, callback) => {
     const connection = dbConnect();
 
-    const query = "SELECT * FROM Inscription WHERE idInscription = ?";
+    const query = "SELECT * FROM inscription WHERE idInscription = ?";
 
     connection.query(query, [inscriptionId], (err, results) => {
         if (err) {
@@ -63,7 +63,7 @@ const getInscriptionById = (inscriptionId, callback) => {
 const deleteInscription = (inscriptionId, callback) => {
     const connection = dbConnect();
 
-    const query = "DELETE FROM Inscription WHERE idInscription = ?";
+    const query = "DELETE FROM inscription WHERE idInscription = ?";
 
     connection.query(query, [inscriptionId], (err, result) => {
         if (err) {
