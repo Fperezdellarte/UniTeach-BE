@@ -1,67 +1,51 @@
+const mysql = require('mysql2/promise'); // Asegúrate de usar mysql2/promise
 const { dbConnect } = require('../../config/mysql');
 
-const createSubject = (subjectData, callback) => {
-    const connection = dbConnect();
-
+const createSubject = async (subjectData) => {
+    const connection = await dbConnect().promise();
     const query = "INSERT INTO subjects (Name, University) VALUES (?, ?)";
-    const values = [
-        subjectData.Name,
-        subjectData.University
-    ];
-
-    connection.query(query, values, (err, result) => {
-        if (err) {
-            console.error("Error al crear la materia:", err);
-            callback(err, null);
-        } else {
-            console.log("Materia creada correctamente");
-            callback(null, result);
-        }
-        connection.end();
-    });
+    const values = [subjectData.Name, subjectData.University];
+    
+    try {
+        const [result] = await connection.query(query, values);
+        return result;
+    } catch (err) {
+        throw err;
+    } finally {
+        await connection.end();
+    }
 }
 
-const getAllSubjects = (callback) => {
-    const connection = dbConnect();
-
+const getAllSubjects = async () => {
+    const connection = await dbConnect().promise();
     const query = "SELECT * FROM subjects";
-
-    connection.query(query, (err, results) => {
-        if (err) {
-            console.error("Error al obtener todas las materias:", err);
-            callback(err, null);
-        } else {
-            console.log("Materias obtenidas correctamente");
-            callback(null, results);
-        }
-        connection.end();
-    });
+    
+    try {
+        const [results] = await connection.query(query);
+        return results;
+    } catch (err) {
+        throw err;
+    } finally {
+        await connection.end();
+    }
 }
 
-const getSubjectById = (subjectId, callback) => {
-    const connection = dbConnect();
-
+const getSubjectById = async (subjectId) => {
+    const connection = await dbConnect().promise();
     const query = "SELECT * FROM subjects WHERE idSubjects = ?";
-
-    connection.query(query, [subjectId], (err, results) => {
-        if (err) {
-            console.error("Error al obtener la materia:", err);
-            callback(err, null);
-        } else {
-            if (results.length > 0) {
-                console.log("Materia obtenida correctamente");
-                callback(null, results[0]);
-            } else {
-                console.log("No se encontró ninguna materia con el ID especificado");
-                callback(null, null);
-            }
-        }
-        connection.end();
-    });
+    
+    try {
+        const [results] = await connection.query(query, [subjectId]);
+        return results.length > 0 ? results[0] : null;
+    } catch (err) {
+        throw err;
+    } finally {
+        await connection.end();
+    }
 }
 
-const modifySubject = (subjectId, subjectData, callback) => {
-    const connection = dbConnect();
+const modifySubject = async (subjectId, subjectData) => {
+    const connection = await dbConnect().promise();
     
     let query = "UPDATE subjects SET ";
     const fields = Object.keys(subjectData);
@@ -71,39 +55,28 @@ const modifySubject = (subjectId, subjectData, callback) => {
     const values = fields.map(field => subjectData[field]);
     values.push(subjectId);
     
-    connection.query(query, values, (err, result) => {
-        if (err) {
-            console.error("Error al actualizar la materia:", err);
-            callback(err, null);
-        } else {
-            console.log("Materia actualizada correctamente");
-            callback(null, result);
-        }
-        connection.end();
-    });
+    try {
+        const [result] = await connection.query(query, values);
+        return result;
+    } catch (err) {
+        throw err;
+    } finally {
+        await connection.end();
+    }
 }
 
-const deleteSubject = (subjectId, callback) => {
-    const connection = dbConnect();
-
+const deleteSubject = async (subjectId) => {
+    const connection = await dbConnect().promise();
     const query = "DELETE FROM subjects WHERE idSubjects = ?";
-
-    connection.query(query, [subjectId], (err, result) => {
-        if (err) {
-            console.error("Error al eliminar la materia:", err);
-            callback(err, null);
-        } else {
-            if (result.affectedRows === 0) {
-                const error = new Error("No se encontró la materia con el ID especificado");
-                console.error(error.message);
-                callback(error, null);
-            } else {
-                console.log("Materia eliminada correctamente");
-                callback(null, result);
-            }
-        }
-        connection.end();
-    });
+    
+    try {
+        const [result] = await connection.query(query, [subjectId]);
+        return result;
+    } catch (err) {
+        throw err;
+    } finally {
+        await connection.end();
+    }
 }
 
 module.exports = { getAllSubjects, getSubjectById, createSubject, modifySubject, deleteSubject };

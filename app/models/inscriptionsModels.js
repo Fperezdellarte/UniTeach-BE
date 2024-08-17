@@ -1,80 +1,107 @@
+const { query } = require('express');
 const { dbConnect } = require('../../config/mysql');
 
-const createInscription = (inscriptionData, callback) => {
-    const connection = dbConnect();
 
-    const query = "INSERT INTO inscription (Users_idUser, Classes_idClasses) VALUES (?, ?)";
-    const values = [
-        inscriptionData.Users_idUser,
-        inscriptionData.Classes_idClasses
-    ];
+// Verificar si el usuario existe
+const userExists = async (userId) => {
+    const connection = await dbConnect().promise();
+    try {
+        const [rows] = await connection.query("SELECT COUNT(*) AS count FROM users WHERE idUser = ?", [userId]);
+        return rows[0].count > 0;
+    } finally {
+        await connection.end();
+    }
+};
 
-    connection.query(query, values, (err, result) => {
-        if (err) {
-            console.error("Error al crear la inscripción:", err);
-            callback(err, null);
+// Verificar si la clase existe
+const classExists = async (classId) => {
+    const connection = await dbConnect().promise();
+    try {
+        const [rows] = await connection.query("SELECT COUNT(*) AS count FROM classes WHERE idClasses = ?", [classId]);
+        return rows[0].count > 0;
+    } finally {
+        await connection.end();
+    }
+};
+
+const createInscription = async (inscriptionData) => {
+    const { Users_idUser, Classes_idClasses } = inscriptionData;
+
+    // Verificar existencia de usuario y clase
+    const userExistsFlag = await userExists(Users_idUser);
+    const classExistsFlag = await classExists(Classes_idClasses);
+
+    if (!userExistsFlag) {
+        throw new Error("El usuario especificado no existe.");
+    }
+
+    if (!classExistsFlag) {
+        throw new Error("La clase especificada no existe.");
+    }
+
+    const connection = await dbConnect().promise();
+    try {
+        const query = "INSERT INTO inscription (Users_idUser, Classes_idClasses) VALUES (?, ?)";
+        const [result] = await connection.query(query, [Users_idUser, Classes_idClasses]);
+        console.log("Inscripción creada correctamente");
+        return result;
+    } catch (err) {
+        console.error("Error al crear la inscripción:", err);
+        throw err;
+    } finally {
+        await connection.end();
+    }
+};
+
+const getAllInscriptions = async () => {
+    const connection = await dbConnect().promise();
+    const query = "SELECT * FROM inscription"
+    try {
+        const [results] = await connection.query(query);
+        console.log("Inscripciones obtenidas correctamente");
+        return results;
+    } catch (err) {
+        console.error("Error al obtener todas las inscripciones:", err);
+        throw err;
+    } finally {
+        await connection.end();
+    }
+};
+
+const getInscriptionById = async (inscriptionId) => {
+    const connection = await dbConnect().promise();
+    try {
+        const [results] = await connection.query("SELECT * FROM inscription WHERE idInscription = ?", [inscriptionId]);
+        if (results.length > 0) {
+            console.log("Inscripción obtenida correctamente");
+            return results[0];
         } else {
-            console.log("Inscripción creada correctamente");
-            callback(null, result);
+            console.log("No se encontró ninguna inscripción con el ID especificado");
+            return null;
         }
-        connection.end();
-    });
-}
+    } catch (err) {
+        console.error("Error al obtener la inscripción:", err);
+        throw err;
+    } finally {
+        await connection.end();
+    }
+};
 
-const getAllInscriptions = (callback) => {
-    const connection = dbConnect();
-
-    const query = "SELECT * FROM inscription";
-
-    connection.query(query, (err, results) => {
-        if (err) {
-            console.error("Error al obtener todas las inscripciones:", err);
-            callback(err, null);
-        } else {
-            console.log("Inscripciones obtenidas correctamente");
-            callback(null, results);
-        }
-        connection.end();
-    });
-}
-
-const getInscriptionById = (inscriptionId, callback) => {
-    const connection = dbConnect();
-
-    const query = "SELECT * FROM inscription WHERE idInscription = ?";
-
-    connection.query(query, [inscriptionId], (err, results) => {
-        if (err) {
-            console.error("Error al obtener la inscripción:", err);
-            callback(err, null);
-        } else {
-            if (results.length > 0) {
-                console.log("Inscripción obtenida correctamente");
-                callback(null, results[0]);
-            } else {
-                console.log("No se encontró ninguna inscripción con el ID especificado");
-                callback(null, null);
-            }
-        }
-        connection.end();
-    });
-}
-
-const deleteInscription = (inscriptionId, callback) => {
-    const connection = dbConnect();
+const deleteInscription = async (inscriptionId) => {
+    const connection = await dbConnect().promise();
 
     const query = "DELETE FROM inscription WHERE idInscription = ?";
 
-    connection.query(query, [inscriptionId], (err, result) => {
-        if (err) {
-            console.error("Error al eliminar la inscripción:", err);
-            callback(err, null);
-        } else {
-            console.log("Inscripción eliminada correctamente");
-            callback(null, result);
-        }
-        connection.end();
-    });
+    try {
+        const [result] = await connection.query(query, [inscriptionId]);
+        return result;
+    } 
+    catch (err) {
+        throw err
+    }
+    finally {
+        await connection.end 
+    }
 }
 
 module.exports = { createInscription, getAllInscriptions, getInscriptionById, deleteInscription };

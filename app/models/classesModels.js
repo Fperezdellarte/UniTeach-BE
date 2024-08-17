@@ -1,7 +1,7 @@
 const { dbConnect } = require('../../config/mysql');
 
-const createClass = (classData, callback) => {
-    const connection = dbConnect();
+const createClass = async (classData) => {
+    const connection = await dbConnect().promise();
     
     const query = "INSERT INTO classes (hour, date, Place, Subjects_idSubjects, Users_idCreator) VALUES (?, ?, ?, ?, ?)";
     const values = [
@@ -11,60 +11,53 @@ const createClass = (classData, callback) => {
         classData.Subjects_idSubjects,
         classData.Users_idCreator
     ];
-
-    connection.query(query, values, (err, result) => {
-        if (err) {
-            console.error("Error al crear la clase:", err);
-            callback(err, null);
-        } else {
-            console.log("Clase creada correctamente");
-            callback(null, result);
-        }
-        connection.end();
-    });
+  try{
+        const [result] = await connection.query(query, values);
+        return result;
+}
+  catch(err){
+    throw err
+  }
+  finally{
+        await connection.end
+  }
 }
 
-const getAllClasses = (callback) => {
-    const connection = dbConnect();
+const getAllClasses = async () => {
+    const connection = await dbConnect().promise();
 
     const query = "SELECT * FROM classes";
 
-    connection.query(query, (err, results) => {
-        if (err) {
-            console.error("Error al obtener todas las clases:", err);
-            callback(err, null);
-        } else {
-            console.log("Clases obtenidas correctamente");
-            callback(null, results);
-        }
-        connection.end();
-    });
+    try {
+        const [results] = await connection.query(query);
+        return results;
+    } catch (err) 
+    {
+        throw err;
+    }
+    finally{
+
+      await  connection.end();
+    }
 }
 
-const getClassById = (classId, callback) => {
-    const connection = dbConnect();
-
+const getClassById = async (classId) => {
+    const connection = await dbConnect().promise();
     const query = "SELECT * FROM classes WHERE idClasses = ?";
-
-    connection.query(query, [classId], (err, results) => {
-        if (err) {
-            console.error("Error al obtener la clase:", err);
-            callback(err, null);
-        } else {
-            if (results.length > 0) {
-                console.log("Clase obtenida correctamente");
-                callback(null, results[0]);
-            } else {
-                console.log("No se encontró ninguna clase con el ID especificado");
-                callback(null, null);
-            }
-        }
-        connection.end();
-    });
+    try {
+        const [results] = await connection.query(query, [classId]);
+        return results.length > 0 ? results[0] : null
+    } catch (err) 
+    {
+      throw err;  
+    }
+    finally{
+        await connection.end();
+    }
 }
 
-const modifyClass = (classId, classData, callback) => {
-    const connection = dbConnect();
+const modifyClass = async (classId, classData) => {
+    const connection = await dbConnect().promise();
     
     let query = "UPDATE classes SET ";
     const fields = Object.keys(classData);
@@ -73,34 +66,30 @@ const modifyClass = (classId, classData, callback) => {
 
     const values = fields.map(field => classData[field]);
     values.push(classId);
-    
-    connection.query(query, values, (err, result) => {
-        if (err) {
-            console.error("Error al actualizar la clase:", err);
-            callback(err, null);
-        } else {
-            console.log("Clase actualizada correctamente");
-            callback(null, result);
-        }
-        connection.end();
-    });
+     
+    try {
+        const [result] = await connection.query(query, values);
+        return result;
+    } catch (err) {
+        throw err;
+    } finally {
+        await connection.end();
+    }
 }
 
-const deleteClass = (classId, callback) => {
-    const connection = dbConnect();
+const deleteClass = async (classId) => {
+    const connection = await dbConnect().promise();
 
     const query = "DELETE FROM classes WHERE idClasses = ?";
 
-    connection.query(query, [classId], (err, result) => {
-        if (err) {
-            console.error("Error al eliminar la clase:", err);
-            callback(err, null);
-        } else {
-            console.log("Clase eliminada correctamente");
-            callback(null, result);
-        }
-        connection.end();
-    });
+    try {
+        const [result] = await connection.query(query, [classId]);
+        return result;
+    } catch (err) {
+        throw err;
+    } finally {
+        await connection.end();
+    }
 }
 
 module.exports = { getAllClasses, getClassById, createClass, modifyClass, deleteClass };

@@ -1,63 +1,44 @@
 const { httpError } = require("../helpers/handleError");
 const { createInscription, getAllInscriptions, deleteInscription, getInscriptionById } = require('../models/inscriptionsModels');
 
-const getInscriptions = async (req, res) => {
+const createInscriptionController = async (req, res) => {
     try {
-        getAllInscriptions((err, inscriptions) => {
-            if (err) {
-                httpError(res, err);
-            } else {
-                res.status(200).json({ inscriptions });
-            }
-        });
+        const inscriptionData = req.body;
+        const result = await createInscription(inscriptionData);
+        res.status(201).json({ message: "Inscripción creada correctamente", inscription: result });
     } catch (error) {
         httpError(res, error);
     }
-}
+};
+
+const getInscriptions = async (req, res) => {
+    try {
+        const inscriptions = await getAllInscriptions();
+        res.status(200).json({ inscriptions });
+    } catch (error) {
+        httpError(res, error);
+    }
+};
 
 const getInscription = async (req, res) => {
     try {
         const inscriptionId = req.params.id;
-
-        getInscriptionById(inscriptionId, (err, result) => {
-            if (err) {
-                httpError(res, err);
-            } else {
-                res.status(200).json({ inscription: result });
-            }
-        });
+        const inscription = await getInscriptionById(inscriptionId);
+        if (inscription) {
+            res.status(200).json({ inscription });
+        } else {
+            res.status(404).json({ message: "Inscripción no encontrada" });
+        }
     } catch (error) {
         httpError(res, error);
     }
-}
-
-const createInscriptionController = async (req, res) => {
-    try {
-        const inscriptionData = req.body;
-
-        createInscription(inscriptionData, (err, result) => {
-            if (err) {
-                httpError(res, err);
-            } else {
-                res.status(201).json({ message: "Inscripción creada correctamente", inscription: result });
-            }
-        });
-    } catch (error) {
-        httpError(res, error);
-    }
-}
+};
 
 const deleteInscriptionController = async (req, res) => {
     try {
         const inscriptionId = req.params.id;
-
-        deleteInscription(inscriptionId, (err, result) => {
-            if (err) {
-                httpError(res, err);
-            } else {
-                res.status(200).json({ message: "Inscripción eliminada correctamente", inscription: result });
-            }
-        });
+        const result = await deleteInscription(inscriptionId)
+        res.status(200).json({ message: "Inscripción eliminada correctamente", inscription: result });
     } catch (error) {
         httpError(res, error);
     }
