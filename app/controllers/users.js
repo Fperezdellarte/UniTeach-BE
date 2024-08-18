@@ -1,5 +1,10 @@
 const { httpError } = require("../helpers/handleError")
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+require("dotenv").config();
+const { JWT_SECRET } = process.env;
 const { createUser, getAllUsers, modifyUser, deleteUser, getUserById } = require('../models/userModels'); // Importa la función createUser del modelo
+const {storeToken} = require ('../models/tokens')
 const {checkFieldsExistence} =require('../services/userService')
 const {dbConnect} = require ('../../config/mysql')
 
@@ -7,21 +12,32 @@ const {dbConnect} = require ('../../config/mysql')
 const login = async (req, res) => {
     try {
         const { Username, Password } = req.body;
-        const consult = 'SELECT * FROM users WHERE Username = ? AND Password = ?';
-        const connection = dbConnect();
-        connection.query(consult, [Username, Password], (error, result) => { // Ejecutamos la consulta utilizando la conexión
-            if (result.length > 0) {
-                res.status(201).json({ message: "login completado" });
+        const connection = await dbConnect().promise();
+        const [rows] = await connection.execute('SELECT * FROM users WHERE Username = ?', [Username]);
+
+        if (rows.length > 0) {
+            const user = rows[0];
+            const isMatch = bcrypt.compareSync(Password, user.Password);
+
+            if (isMatch) {
+                const token = jwt.sign({ id: user.idUser }, JWT_SECRET);
+                
+                await storeToken(token, user.idUser);
+
+                res.status(200).json({ message: 'Bienvenid@ ' + user.Name, user, token });
             } else {
-                console.log('Usuario incorrecto');
-                res.status(401).json({ message: 'Usuario o contraseña incorrectos' });
+                res.status(400).json({ message: "Incorrect username or password" });
             }
-        });
+        } else {
+            res.status(401).json({ message: 'Usuario o contraseña incorrectos' });
+        }
+
+        connection.end(); // Cierra la conexión
     } catch (error) {
         console.error('Error al intentar iniciar sesión:', error);
         res.status(500).json({ message: "Error interno al iniciar sesión" });
     }
-}
+};
 
 const getUsers = async (req, res) =>{
     try {
@@ -63,7 +79,11 @@ const createUserController = async (req, res) => {
         }
 
         // Crear el usuario
+        const hashedPassword = await bcrypt.hash(userData.Password, 10);
+        userData.Password = hashedPassword;
+
         const result = await createUser(userData);
+
         res.status(201).json({ message: "Usuario creado correctamente", user: result });
     } catch (error) {
         httpError(res, error); // Enviar un error HTTP al cliente
