@@ -46,6 +46,7 @@ const getClassById = async (classId) => {
     const query = "SELECT * FROM classes WHERE idClasses = ?";
     try {
         const [results] = await connection.query(query, [classId]);
+        console.log('clase obtenida correctamente');
         return results.length > 0 ? results[0] : null
     } catch (err) 
     {

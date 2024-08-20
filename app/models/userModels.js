@@ -1,6 +1,7 @@
 const mysql = require('mysql2');
 const { dbConnect } = require('../../config/mysql');
 
+
 const createUser = async (userData) => {
     const connection = dbConnect().promise();
     const query = `

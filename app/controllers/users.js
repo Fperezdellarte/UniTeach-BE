@@ -4,9 +4,25 @@ const jwt = require('jsonwebtoken');
 require("dotenv").config();
 const { JWT_SECRET } = process.env;
 const { createUser, getAllUsers, modifyUser, deleteUser, getUserById } = require('../models/userModels'); // Importa la función createUser del modelo
-const {storeToken} = require ('../models/tokens')
+const {storeToken, removeToken} = require ('../models/tokens')
 const {checkFieldsExistence} =require('../services/userService')
 const {dbConnect} = require ('../../config/mysql')
+
+const logout = async (req, res) => {
+    try {
+        const token = req.headers.authorization.split(" ")[1]; // Extrae el token del header
+        const userId = req.user.id;
+        if (!token || !userId) {
+            return res.status(400).send({ message: "Token o usuario no proporcionado" });
+        }
+
+        await removeToken(userId, token); // Elimina el token
+        res.status(200).send({ message: "Sesión cerrada correctamente" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Error al cerrar sesión" });
+    }
+};
 
 
 const login = async (req, res) => {
@@ -117,4 +133,4 @@ const deleteUserController = async (req, res) => {
 };
 
 
-module.exports = {getUsers, getUser, createUserController, updateUser, deleteUserController, login}
+module.exports = {getUsers, getUser, createUserController, updateUser, deleteUserController, login, logout}

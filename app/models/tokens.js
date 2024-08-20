@@ -1,6 +1,25 @@
 const mysql = require('mysql2');
 const { dbConnect } = require('../../config/mysql'); 
 
+
+const removeToken = async (userId, token) => {
+    const connection = await dbConnect().promise();
+
+    try {
+        const query = 'DELETE FROM tokens WHERE userId = ? AND token = ?';
+        const [result] = await connection.query(query, [userId, token]);
+        console.log('Token eliminado correctamente');
+        return result;
+    } catch (error) {
+        console.error('Error al eliminar el token:', error);
+        throw error;
+    } finally {
+        connection.end();
+    }
+};
+
+
+
 const storeToken = async (token, userId, expiresInMinutes = 600) => {
     const connection = await dbConnect().promise();
     try {
@@ -70,4 +89,4 @@ const verifyToken = async (token) => {
 };
 
 
-module.exports = {verifyToken, storeToken }
+module.exports = {verifyToken, storeToken, removeToken }
