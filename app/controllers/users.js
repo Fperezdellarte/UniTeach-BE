@@ -7,6 +7,7 @@ const { createUser, getAllUsers, modifyUser, deleteUser, getUserById } = require
 const {storeToken, removeToken} = require ('../models/tokens')
 const {checkFieldsExistence} =require('../services/userService')
 const {dbConnect} = require ('../../config/mysql')
+const {uploadImageToImgur} = require ('../../config/imgurUplouder') 
 
 const logout = async (req, res) => {
     try {
@@ -80,37 +81,45 @@ const getUser = async (req, res) =>{
     }  
 }
 
-
 const createUserController = async (req, res) => {
     const userData = req.body;
+    const imageFile = req.file; // Accede al archivo subido
 
     try {
-        // Verificar la existencia de campos
-        const existingFields = await checkFieldsExistence(userData);
+        // Verifica si se ha subido un archivo
+        if (imageFile) {
+            // Sube la imagen a Imgur y obtiene el enlace
+            const imageUrl = await uploadImageToImgur(imageFile.path);
+            userData.Avatar_URL = imageUrl;
+        }
 
+        // Verificar la existencia de campos y crear el usuario
+        const existingFields = await checkFieldsExistence(userData);
         if (existingFields.length > 0) {
-            // Enviar una respuesta al cliente indicando qué campos ya existen
             const message = existingFields.map(field => `${field} ya existe en la base de datos.`).join(' ');
             return res.status(400).json({ message });
         }
 
-        // Crear el usuario
-        const hashedPassword = await bcrypt.hash(userData.Password, 10);
-        userData.Password = hashedPassword;
+           // Crear el usuario
+           const hashedPassword = await bcrypt.hash(userData.Password, 10);
+           userData.Password = hashedPassword;
+   
+           const result = await createUser(userData);
+   
+           res.status(201).json({ message: "Usuario creado correctamente", user: result });
+       } catch (error) {
+           httpError(res, error); // Enviar un error HTTP al cliente
+       }
+   };
 
-        const result = await createUser(userData);
-
-        res.status(201).json({ message: "Usuario creado correctamente", user: result });
-    } catch (error) {
-        httpError(res, error); // Enviar un error HTTP al cliente
-    }
-};
-
-
-
-const updateUser = async (req, res) => {
+   const updateUser = async (req, res) => {
     const userId = req.params.id;
     const userData = req.body;
+    const userImage = req.file ? req.file.path : null; // Ruta del archivo subido
+
+    if (userImage) {
+        userData.Avatar_URL = userImage; // Actualiza la URL de la imagen en los datos del usuario
+    }
 
     try {
         const result = await modifyUser(userId, userData);
@@ -119,6 +128,8 @@ const updateUser = async (req, res) => {
         res.status(500).json({ error: "Error al actualizar el usuario" });
     }
 };
+
+
 
 
 const deleteUserController = async (req, res) => {

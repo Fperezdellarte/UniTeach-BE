@@ -1,12 +1,11 @@
 const mysql = require('mysql2');
 const { dbConnect } = require('../../config/mysql');
 
-
 const createUser = async (userData) => {
     const connection = dbConnect().promise();
     const query = `
-        INSERT INTO users (Username, Password, Name, DNI, Legajo, TypeOfUser, Mail, Phone, University)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO users (Username, Password, Name, DNI, Legajo, TypeOfUser, Mail, Phone, University, Avatar_URL)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     const values = [
         userData.Username,
@@ -17,7 +16,8 @@ const createUser = async (userData) => {
         userData.TypeOfUser,
         userData.Mail,
         userData.Phone,
-        userData.University
+        userData.University,
+        userData.Avatar_URL // Cambia el nombre a Avatar_URL
     ];
 
     try {
@@ -31,6 +31,7 @@ const createUser = async (userData) => {
         connection.end();
     }
 };
+
 
 
 const getAllUsers = async () => {
@@ -76,14 +77,19 @@ const modifyUser = async (userId, userData) => {
     const connection = await dbConnect().promise(); // Usar conexión basada en promesas
 
     try {
+        // Construir la consulta SQL dinámicamente
         let query = "UPDATE users SET ";
         const fields = Object.keys(userData);
+        
+        // Crear la parte SET de la consulta SQL
         const setValues = fields.map(field => `${field} = ?`).join(', ');
         query += setValues + " WHERE idUser = ?";
 
+        // Preparar los valores para la consulta SQL
         const values = fields.map(field => userData[field]);
         values.push(userId);
 
+        // Ejecutar la consulta SQL
         const [result] = await connection.query(query, values);
         console.log("Usuario actualizado correctamente");
         return result;
@@ -94,6 +100,7 @@ const modifyUser = async (userId, userData) => {
         await connection.end(); // Asegurarse de cerrar la conexión
     }
 };
+
 
 const deleteUser = async (userId) => {
     const connection = await dbConnect().promise(); // Usar conexión basada en promesas
