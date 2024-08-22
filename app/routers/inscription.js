@@ -1,14 +1,17 @@
 const express = require('express');
-const { getInscription, getInscriptions, createInscriptionController, deleteInscriptionController } = require('../controllers/inscription');
+const { getInscription, getInscriptions, createInscriptionController, deleteInscriptionController, getInscriptionByUser } = require('../controllers/inscription');
+const { authentication, isAdmin } = require('../middleware/authentication');
 
 const router = express.Router();
 
-router.get('/', getInscriptions);
+router.get('/',authentication, getInscriptions);
 
-router.get('/:id', getInscription);
+router.get('/myinscriptions/:id',authentication, getInscriptionByUser)
 
-router.post('/', createInscriptionController);
+router.get('/:id',isAdmin, getInscription);
 
-router.delete('/:id', deleteInscriptionController);
+router.post('/',authentication, createInscriptionController);
+
+router.delete('/:id',authentication, deleteInscriptionController);
 
 module.exports = router;

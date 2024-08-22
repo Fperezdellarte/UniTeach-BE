@@ -1,5 +1,5 @@
 const { httpError } = require("../helpers/handleError");
-const { createInscription, getAllInscriptions, deleteInscription, getInscriptionById } = require('../models/inscriptionsModels');
+const { createInscription, getAllInscriptions, deleteInscription, getInscriptionById, getInscriptionByUserId } = require('../models/inscriptionsModels');
 
 const createInscriptionController = async (req, res) => {
     try {
@@ -11,6 +11,7 @@ const createInscriptionController = async (req, res) => {
     }
 };
 
+
 const getInscriptions = async (req, res) => {
     try {
         const inscriptions = await getAllInscriptions();
@@ -20,10 +21,24 @@ const getInscriptions = async (req, res) => {
     }
 };
 
+const getInscriptionByUser = async (req, res) => {
+    try {
+        const userId = req.params.id;
+        const inscription = await getInscriptionByUserId(userId);
+        if (inscription) {
+            res.status(200).json({ inscription });
+        } else {
+            res.status(404).json({ message: "No tienes inscripciones" });
+        }
+    } catch (error) {
+        httpError(res, error);
+    }
+};
+
 const getInscription = async (req, res) => {
     try {
-        const inscriptionId = req.params.id;
-        const inscription = await getInscriptionById(inscriptionId);
+        const userId = req.params.id;
+        const inscription = await getInscriptionById(userId);
         if (inscription) {
             res.status(200).json({ inscription });
         } else {
@@ -44,4 +59,4 @@ const deleteInscriptionController = async (req, res) => {
     }
 }
 
-module.exports = { getInscriptions, getInscription, createInscriptionController, deleteInscriptionController };
+module.exports = { getInscriptions, getInscription, createInscriptionController, deleteInscriptionController ,getInscriptionByUser};

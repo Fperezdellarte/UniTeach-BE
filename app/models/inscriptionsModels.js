@@ -86,6 +86,27 @@ const getInscriptionById = async (inscriptionId) => {
         await connection.end();
     }
 };
+const getInscriptionByUserId = async (userId) => {
+    const connection = await dbConnect().promise();
+    try {
+        // Cambiar la consulta para buscar por ID del usuario
+        const [results] = await connection.query("SELECT * FROM inscription WHERE Users_idUser = ?", [userId]);
+
+        if (results.length > 0) {
+            console.log("Inscripciones obtenidas correctamente");
+            return results; // Devuelve todas las inscripciones del usuario
+        } else {
+            console.log("No se encontraron inscripciones para el usuario con el ID especificado");
+            return []; // Devuelve un array vacío si no hay inscripciones
+        }
+    } catch (err) {
+        console.error("Error al obtener las inscripciones:", err);
+        throw err;
+    } finally {
+        await connection.end(); // Asegúrate de cerrar la conexión
+    }
+};
+
 
 const deleteInscription = async (inscriptionId) => {
     const connection = await dbConnect().promise();
@@ -104,4 +125,4 @@ const deleteInscription = async (inscriptionId) => {
     }
 }
 
-module.exports = { createInscription, getAllInscriptions, getInscriptionById, deleteInscription };
+module.exports = { createInscription, getAllInscriptions, getInscriptionById, deleteInscription, getInscriptionByUserId };

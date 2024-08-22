@@ -1,46 +1,26 @@
 const express = require ('express')
-const { getUser, getUsers, updateUser, deleteUserController, createUserController, login } = require('../controllers/users')
+const { getUser, getUsers, updateUser, deleteUserController, createUserController, login, logout} = require('../controllers/users')
+const {authentication} = require ('../middleware/authentication')
 const router = express.Router()
 
-router.get('/',getUsers)
+router.get('/', getUsers)
 
-router.get('/:id',getUser)
+router.post("/logout",authentication, logout)
 
-router.post('/',createUserController)
+router.post("/login",login)
 
-router.patch('/:id',updateUser)
+router.post("/signup", createUserController)
 
-router.delete('/:id',deleteUserController)
+router.post('/', createUserController)
 
-router.post("/login", async (req ,res)=>{
-    const{ Username, Password} = req.body;
-    if(!!!Username || !!!Password)
-       {
-        return res.status(400).json(jsonResponse(400,{
-            error:"Complete ambos campos"
-        })
-    );
-    }
-    else{
-        login(req, res);
-    }
-      ;
-    
-});
+router.get('/:id',authentication, getUser)
 
-router.post("/signup", async (req ,res)=>{
-    const{ Username, Name, Password, DNI,Legajo,TypeOfUser,Mail,University} = req.body;
-    if(!!!Name|| !!!Username || !!!Password || !!!DNI || !!!Legajo || !!!TypeOfUser || !!!Mail || !!!University)
-       {
-        return res.status(400).json(jsonResponse(400,{
-            error:"Fiels are required",
-        })
-    );
-    }else{
-        createUserController(req ,res); 
-    }
-    
-} ,);
+router.patch('/:id',authentication, updateUser)
+
+router.delete('/:id', deleteUserController)
+
+
+
 
 
 module.exports = router
