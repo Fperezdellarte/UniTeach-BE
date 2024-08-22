@@ -4,16 +4,21 @@ const { calculateEndDate } = require('../services/classesService');
 const createClass = async (classData) => {
     const connection = await dbConnect().promise();
 
+    // Calcular la fecha y hora de fin de la clase
     const endDate = calculateEndDate(classData.hour, classData.date);
 
-    const query = "INSERT INTO classes (hour, date, Place, Subjects_idSubjects, Users_idCreator, endDate) VALUES (?, ?, ?, ?, ?, ?)";
+    // Determinar si la clase ha expirado
+    const expired = new Date(endDate) < new Date() ? true : false;
+
+    const query = "INSERT INTO classes (hour, date, Place, Subjects_idSubjects, Users_idCreator, endDate, expired) VALUES (?, ?, ?, ?, ?, ?, ?)";
     const values = [
         classData.hour,
         classData.date,
         classData.Place,
         classData.Subjects_idSubjects,
         classData.Users_idCreator,
-        endDate // Fecha y hora de fin de clase
+        endDate, // Fecha y hora de fin de clase
+        expired // Indica si la clase ha expirado
     ];
 
     try {
@@ -25,6 +30,7 @@ const createClass = async (classData) => {
         await connection.end();
     }
 };
+
 
 const getAllClasses = async () => {
     const connection = await dbConnect().promise();
