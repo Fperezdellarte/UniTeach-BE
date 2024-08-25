@@ -115,19 +115,24 @@ const createUserController = async (req, res) => {
    const updateUser = async (req, res) => {
     const userId = req.params.id;
     const userData = req.body;
-    const userImage = req.file ? req.file.path : null; // Ruta del archivo subido
-
-    if (userImage) {
-        userData.Avatar_URL = userImage; // Actualiza la URL de la imagen en los datos del usuario
-    }
+    const imageFile = req.file;
 
     try {
+        if (imageFile) {
+            const imageUrl = await uploadImageToImgur(imageFile.path);
+            userData.Avatar_URL = imageUrl;
+            console.log("URL de la imagen:", imageUrl);
+        }
+
         const result = await modifyUser(userId, userData);
         res.json({ message: "Usuario actualizado correctamente", result });
     } catch (error) {
+        console.error('Error al actualizar el usuario:', error);
         res.status(500).json({ error: "Error al actualizar el usuario" });
     }
 };
+
+
 
 
 

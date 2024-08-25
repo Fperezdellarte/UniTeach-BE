@@ -16,7 +16,7 @@ router.post('/', createUserController)
 
 router.get('/:id',authentication, getUser)
 
-router.patch('/:id',authentication, updateUser)
+router.patch('/:id',authentication, imageLoad, updateUser)
 
 router.delete('/:id', deleteUserController)
 
