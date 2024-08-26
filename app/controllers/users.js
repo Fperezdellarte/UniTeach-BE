@@ -124,17 +124,13 @@ const createUserController = async (req, res) => {
             console.log("URL de la imagen:", imageUrl);
         }
 
-        const result = await modifyUser(userId, userData);
-        res.json({ message: "Usuario actualizado correctamente", result });
+        const updatedUser = await modifyUser(userId, userData);
+        res.json({ message: "Usuario actualizado correctamente", user: updatedUser });
     } catch (error) {
         console.error('Error al actualizar el usuario:', error);
         res.status(500).json({ error: "Error al actualizar el usuario" });
     }
 };
-
-
-
-
 
 
 const deleteUserController = async (req, res) => {

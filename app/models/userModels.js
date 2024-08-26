@@ -90,9 +90,18 @@ const modifyUser = async (userId, userData) => {
         values.push(userId);
 
         // Ejecutar la consulta SQL
-        const [result] = await connection.query(query, values);
-        console.log("Usuario actualizado correctamente");
-        return result;
+        await connection.query(query, values);
+
+        // Recuperar los datos actualizados del usuario
+        query = "SELECT * FROM users WHERE idUser = ?";
+        const [rows] = await connection.query(query, [userId]);
+        
+        if (rows.length > 0) {
+            console.log("Usuario actualizado correctamente");
+            return rows[0]; // Devolver el primer resultado
+        } else {
+            throw new Error("Usuario no encontrado");
+        }
     } catch (err) {
         console.error("Error al actualizar el usuario:", err);
         throw err; // Lanzar el error para que pueda ser manejado en el controlador
@@ -100,6 +109,7 @@ const modifyUser = async (userId, userData) => {
         await connection.end(); // Asegurarse de cerrar la conexión
     }
 };
+
 
 
 const deleteUser = async (userId) => {
