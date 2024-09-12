@@ -1,5 +1,5 @@
 const express = require ('express')
-const { getUser, getUsers, updateUser, deleteUserController, createUserController, login, logout} = require('../controllers/users')
+const { getUser,getMentor, getUsers, updateUser, deleteUserController, createUserController, login, logout} = require('../controllers/users')
 const {authentication} = require ('../middleware/authentication')
 const { imageLoad } = require('../middleware/multer')
 const router = express.Router()
@@ -15,6 +15,8 @@ router.post("/signup",imageLoad, createUserController)
 router.post('/', createUserController)
 
 router.get('/:id',authentication, getUser)
+
+router.get('/mentor/:id', authentication ,getMentor)
 
 router.patch('/:id',authentication, imageLoad, updateUser)
 
