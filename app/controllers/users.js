@@ -81,6 +81,34 @@ const getUser = async (req, res) =>{
     }  
 }
 
+const getMentor= async (req, res) => {
+    try {
+        const userId = req.params.id;
+        const user = await getUserById(userId);
+
+        if (user) {
+            // Crear un objeto con solo los campos deseados
+            const filteredUser = {
+                idUser: user.idUser,
+                Username: user.Username,
+                Name: user.Name,
+                Mail: user.Mail,
+                Phone: user.Phone,
+                University: user.University,
+                Description: user.Description,
+                Opinion: user.Opinion,
+                Avatar_URL: user.Avatar_URL
+            };
+
+            res.json(filteredUser); // Devolver el usuario filtrado como JSON
+        } else {
+            res.status(404).json({ error: 'Usuario no encontrado' });
+        }
+    } catch (err) {
+        res.status(500).json({ error: 'Error al obtener el usuario' });
+    }  
+}
+
 const createUserController = async (req, res) => {
     const userData = req.body;
     const imageFile = req.file; // Accede al archivo subido
@@ -145,4 +173,4 @@ const deleteUserController = async (req, res) => {
 };
 
 
-module.exports = {getUsers, getUser, createUserController, updateUser, deleteUserController, login, logout}
+module.exports = {getUsers,getMentor, getUser, createUserController, updateUser, deleteUserController, login, logout}
