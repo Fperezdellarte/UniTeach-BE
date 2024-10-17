@@ -4,16 +4,21 @@ const { calculateEndDate } = require('../services/classesService');
 const createClass = async (classData) => {
     const connection = await dbConnect().promise();
 
+    // Calcular la fecha y hora de fin de la clase
     const endDate = calculateEndDate(classData.hour, classData.date);
 
-    const query = "INSERT INTO classes (hour, date, Place, Subjects_idSubjects, Users_idCreator, endDate) VALUES (?, ?, ?, ?, ?, ?)";
+    // Determinar si la clase ha expirado
+    const expired = new Date(endDate) < new Date() ? true : false;
+
+    const query = "INSERT INTO classes (hour, date, Place, Subjects_idSubjects, Users_idCreator, endDate, expired) VALUES (?, ?, ?, ?, ?, ?, ?)";
     const values = [
         classData.hour,
         classData.date,
         classData.Place,
         classData.Subjects_idSubjects,
         classData.Users_idCreator,
-        endDate // Fecha y hora de fin de clase
+        endDate, // Fecha y hora de fin de clase
+        expired // Indica si la clase ha expirado
     ];
 
     try {
@@ -25,6 +30,7 @@ const createClass = async (classData) => {
         await connection.end();
     }
 };
+
 
 const getAllClasses = async () => {
     const connection = await dbConnect().promise();
@@ -112,6 +118,42 @@ const modifyClass = async (classId, classData) => {
     }
 };
 
+const getAllClassesOfMentor = async (idUser) => {
+    const connection = await dbConnect().promise();
+    try {
+        // Obtener todas las clases del mentor
+        const [classes] = await connection.query("SELECT * FROM classes WHERE Users_idCreator = ?", [idUser]);
+        
+        if (classes.length > 0) {
+            console.log("Clases obtenidas correctamente");
+
+            // Iterar sobre cada clase para obtener el nombre de la materia
+            for (let i = 0; i < classes.length; i++) {
+                const classItem = classes[i];
+                const [subjectResult] = await connection.query("SELECT Name FROM subjects WHERE idSubjects = ?", [classItem.Subjects_idSubjects]);
+                
+                if (subjectResult.length > 0) {
+                    // Reemplazar el ID de la materia con el nombre
+                    classItem.SubjectName = subjectResult[0].Name;
+                } else {
+                    classItem.SubjectName = "Materia no encontrada";
+                }
+            }
+
+            return classes;
+        } else {
+            console.log("No se encontró ninguna clase");
+            return null;
+        }
+    } catch (err) {
+        console.error("Error al obtener las clases:", err);
+        throw err;
+    } finally {
+        await connection.end();
+    }
+};
+
+
 
 
 const deleteClass = async (classId) => {
@@ -129,4 +171,4 @@ const deleteClass = async (classId) => {
     }
 }
 
-module.exports = { getAllClasses, getClassById, createClass, modifyClass, deleteClass };
+module.exports = { getAllClasses, getClassById, createClass, modifyClass, deleteClass, getAllClassesOfMentor };

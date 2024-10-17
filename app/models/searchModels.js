@@ -5,13 +5,13 @@ const { dbConnect } = require('../../config/mysql'); // Asegúrate de tener conf
 const searchMentors = async (subjectName, university) => {
     const connection = dbConnect().promise();
     const query = `
-    SELECT 
+  SELECT 
     u.idUser, 
     u.Name AS MentorName,
     u.Opinion,
     s.Name AS SubjectName,
     u.University AS MentorUniversity,
-    GROUP_CONCAT(CONCAT(c.hour, ' ', DATE_FORMAT(c.date, '%d-%m-%Y')) SEPARATOR ', ') AS ClassDetails
+    GROUP_CONCAT(CONCAT(c.hour, ', ', DATE_FORMAT(c.date, '%d-%m-%Y')) SEPARATOR '; ') AS ClassDetails
 FROM 
     users u
 JOIN 
@@ -19,7 +19,9 @@ JOIN
 JOIN 
     subjects s ON us.Subjects_idSubjects = s.idSubjects
 JOIN 
-    classes c ON c.Subjects_idSubjects = s.idSubjects AND c.Users_idCreator = u.idUser
+    classes c ON c.Subjects_idSubjects = s.idSubjects 
+             AND c.Users_idCreator = u.idUser
+             AND c.expired = FALSE
 WHERE 
     u.TypeOfUser IN ('MENTOR', 'AMBOS')
     AND s.Name LIKE ?

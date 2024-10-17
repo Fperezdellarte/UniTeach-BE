@@ -1,5 +1,5 @@
 const { httpError } = require("../helpers/handleError");
-const { createClass , getAllClasses, modifyClass, deleteClass, getClassById } = require('../models/classesModels'); 
+const { createClass , getAllClasses, modifyClass, deleteClass, getClassById, getAllClassesOfMentor } = require('../models/classesModels'); 
 
 const getClasses = async (req, res) => {
     try {
@@ -12,6 +12,19 @@ const getClasses = async (req, res) => {
 
         }
 }
+const getClassesMentor = async (req, res) => {
+    try {
+        const userId = req.params.id;
+        const clases = await getAllClassesOfMentor(userId);
+        if (clases) {
+            res.status(200).json({ clases });
+        } else {
+            res.status(404).json({ message: "No podemos mostrar las clases" });
+        }
+    } catch (error) {
+        httpError(res, error);
+    }
+};
 
 const getClass = async (req, res) => {
     try {
@@ -63,4 +76,4 @@ const deleteClassController = async (req, res) => {
     }
 }
 
-module.exports = { getClasses, getClass, createClassController, updateClass, deleteClassController };
+module.exports = { getClasses, getClass, createClassController,getClassesMentor, updateClass, deleteClassController };

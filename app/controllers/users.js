@@ -7,6 +7,7 @@ const { createUser, getAllUsers, modifyUser, deleteUser, getUserById } = require
 const {storeToken, removeToken} = require ('../models/tokens')
 const {checkFieldsExistence} =require('../services/userService')
 const {dbConnect} = require ('../../config/mysql')
+const {uploadImageToImgur} = require ('../../config/imgurUplouder') 
 
 const logout = async (req, res) => {
     try {
@@ -80,42 +81,81 @@ const getUser = async (req, res) =>{
     }  
 }
 
+const getMentor= async (req, res) => {
+    try {
+        const userId = req.params.id;
+        const user = await getUserById(userId);
+
+        if (user) {
+            // Crear un objeto con solo los campos deseados
+            const filteredUser = {
+                idUser: user.idUser,
+                Username: user.Username,
+                Name: user.Name,
+                Mail: user.Mail,
+                Phone: user.Phone,
+                University: user.University,
+                Description: user.Description,
+                Opinion: user.Opinion,
+                Avatar_URL: user.Avatar_URL
+            };
+
+            res.json(filteredUser); // Devolver el usuario filtrado como JSON
+        } else {
+            res.status(404).json({ error: 'Usuario no encontrado' });
+        }
+    } catch (err) {
+        res.status(500).json({ error: 'Error al obtener el usuario' });
+    }  
+}
 
 const createUserController = async (req, res) => {
     const userData = req.body;
+    const imageFile = req.file; // Accede al archivo subido
 
     try {
-        // Verificar la existencia de campos
-        const existingFields = await checkFieldsExistence(userData);
+        // Verifica si se ha subido un archivo
+        if (imageFile) {
+            // Sube la imagen a Imgur y obtiene el enlace
+            const imageUrl = await uploadImageToImgur(imageFile.path);
+            userData.Avatar_URL = imageUrl;
+        }
 
+        // Verificar la existencia de campos y crear el usuario
+        const existingFields = await checkFieldsExistence(userData);
         if (existingFields.length > 0) {
-            // Enviar una respuesta al cliente indicando qué campos ya existen
             const message = existingFields.map(field => `${field} ya existe en la base de datos.`).join(' ');
             return res.status(400).json({ message });
         }
 
-        // Crear el usuario
-        const hashedPassword = await bcrypt.hash(userData.Password, 10);
-        userData.Password = hashedPassword;
+           // Crear el usuario
+           const hashedPassword = await bcrypt.hash(userData.Password, 10);
+           userData.Password = hashedPassword;
+   
+           const result = await createUser(userData);
+   
+           res.status(201).json({ message: "Usuario creado correctamente", user: result });
+       } catch (error) {
+           httpError(res, error); // Enviar un error HTTP al cliente
+       }
+   };
 
-        const result = await createUser(userData);
-
-        res.status(201).json({ message: "Usuario creado correctamente", user: result });
-    } catch (error) {
-        httpError(res, error); // Enviar un error HTTP al cliente
-    }
-};
-
-
-
-const updateUser = async (req, res) => {
+   const updateUser = async (req, res) => {
     const userId = req.params.id;
     const userData = req.body;
+    const imageFile = req.file;
 
     try {
-        const result = await modifyUser(userId, userData);
-        res.json({ message: "Usuario actualizado correctamente", result });
+        if (imageFile) {
+            const imageUrl = await uploadImageToImgur(imageFile.path);
+            userData.Avatar_URL = imageUrl;
+            console.log("URL de la imagen:", imageUrl);
+        }
+
+        const updatedUser = await modifyUser(userId, userData);
+        res.json({ message: "Usuario actualizado correctamente", user: updatedUser });
     } catch (error) {
+        console.error('Error al actualizar el usuario:', error);
         res.status(500).json({ error: "Error al actualizar el usuario" });
     }
 };
@@ -133,4 +173,4 @@ const deleteUserController = async (req, res) => {
 };
 
 
-module.exports = {getUsers, getUser, createUserController, updateUser, deleteUserController, login, logout}
+module.exports = {getUsers,getMentor, getUser, createUserController, updateUser, deleteUserController, login, logout}
