@@ -1,15 +1,29 @@
 const express = require ('express')
-const { getUser, getUsers, updateUser, deleteUserController, createUserController } = require('../controllers/users')
+const { getUser,getMentor, getUsers, updateUser, deleteUserController, createUserController, login, logout} = require('../controllers/users')
+const {authentication} = require ('../middleware/authentication')
+const { imageLoad } = require('../middleware/multer')
 const router = express.Router()
 
-router.get('/',getUsers)
+router.get('/', getUsers)
 
-router.get('/:id',getUser)
+router.post("/logout",authentication, logout)
 
-router.post('/',createUserController)
+router.post("/login",login)
 
-router.patch('/:id',updateUser)
+router.post("/signup",imageLoad, createUserController)
 
-router.delete('/:id',deleteUserController)
+router.post('/', createUserController)
+
+router.get('/:id',authentication, getUser)
+
+router.get('/mentor/:id', authentication ,getMentor)
+
+router.patch('/:id',authentication, imageLoad, updateUser)
+
+router.delete('/:id', deleteUserController)
+
+
+
+
 
 module.exports = router

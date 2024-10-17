@@ -1,8 +1,10 @@
 const express = require('express');
-const { getClass, getClasses, updateClass, deleteClassController, createClassController } = require('../controllers/classes');
+const { getClass, getClassesMentor, getClasses, updateClass, deleteClassController, createClassController } = require('../controllers/classes');
 const router = express.Router();
 
 router.get('/', getClasses);
+
+router.get('/mentorclass/:id',getClassesMentor)
 
 router.get('/:id', getClass);
 

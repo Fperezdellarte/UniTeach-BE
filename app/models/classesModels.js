@@ -1,106 +1,174 @@
 const { dbConnect } = require('../../config/mysql');
+const { calculateEndDate } = require('../services/classesService');
 
-const createClass = (classData, callback) => {
-    const connection = dbConnect();
-    
-    const query = "INSERT INTO classes (hour, date, Place, Subjects_idSubjects, Users_idCreator) VALUES (?, ?, ?, ?, ?)";
+const createClass = async (classData) => {
+    const connection = await dbConnect().promise();
+
+    // Calcular la fecha y hora de fin de la clase
+    const endDate = calculateEndDate(classData.hour, classData.date);
+
+    // Determinar si la clase ha expirado
+    const expired = new Date(endDate) < new Date() ? true : false;
+
+    const query = "INSERT INTO classes (hour, date, Place, Subjects_idSubjects, Users_idCreator, endDate, expired) VALUES (?, ?, ?, ?, ?, ?, ?)";
     const values = [
         classData.hour,
         classData.date,
         classData.Place,
         classData.Subjects_idSubjects,
-        classData.Users_idCreator
+        classData.Users_idCreator,
+        endDate, // Fecha y hora de fin de clase
+        expired // Indica si la clase ha expirado
     ];
 
-    connection.query(query, values, (err, result) => {
-        if (err) {
-            console.error("Error al crear la clase:", err);
-            callback(err, null);
-        } else {
-            console.log("Clase creada correctamente");
-            callback(null, result);
-        }
-        connection.end();
-    });
-}
+    try {
+        const [result] = await connection.query(query, values);
+        return result;
+    } catch (err) {
+        throw err;
+    } finally {
+        await connection.end();
+    }
+};
 
-const getAllClasses = (callback) => {
-    const connection = dbConnect();
+
+const getAllClasses = async () => {
+    const connection = await dbConnect().promise();
 
     const query = "SELECT * FROM classes";
 
-    connection.query(query, (err, results) => {
-        if (err) {
-            console.error("Error al obtener todas las clases:", err);
-            callback(err, null);
-        } else {
-            console.log("Clases obtenidas correctamente");
-            callback(null, results);
-        }
-        connection.end();
-    });
+    try {
+        const [results] = await connection.query(query);
+        return results;
+    } catch (err) 
+    {
+        throw err;
+    }
+    finally{
+
+      await  connection.end();
+    }
 }
 
-const getClassById = (classId, callback) => {
-    const connection = dbConnect();
-
+const getClassById = async (classId) => {
+    const connection = await dbConnect().promise();
     const query = "SELECT * FROM classes WHERE idClasses = ?";
-
-    connection.query(query, [classId], (err, results) => {
-        if (err) {
-            console.error("Error al obtener la clase:", err);
-            callback(err, null);
-        } else {
-            if (results.length > 0) {
-                console.log("Clase obtenida correctamente");
-                callback(null, results[0]);
-            } else {
-                console.log("No se encontró ninguna clase con el ID especificado");
-                callback(null, null);
-            }
-        }
-        connection.end();
-    });
+    try {
+        const [results] = await connection.query(query, [classId]);
+        console.log('clase obtenida correctamente');
+        return results.length > 0 ? results[0] : null
+    } catch (err) 
+    {
+      throw err;  
+    }
+    finally{
+        await connection.end();
+    }
 }
 
-const modifyClass = (classId, classData, callback) => {
-    const connection = dbConnect();
-    
-    let query = "UPDATE classes SET ";
+const modifyClass = async (classId, classData) => {
+    const connection = await dbConnect().promise();
+
+    // Primero, obtener todos los datos actuales necesarios
+    const [currentClass] = await connection.query("SELECT Date, hour FROM classes WHERE idClasses = ?", [classId]);
+
+    const currentDate = currentClass[0]?.Date;
+    const currentHour = currentClass[0]?.hour;
+   
+    if (!currentDate || !currentHour) {
+        throw new Error('Fecha de inicio y hora actuales no encontradas para calcular la fecha de fin.');
+    }
+
+    // Verificar qué campos se están actualizando
     const fields = Object.keys(classData);
+    const updateDate = fields.includes('Date');
+    const updateHour = fields.includes('hour');
+
+    let endDate;
+
+    // Calcular la nueva fecha de fin
+    if (updateDate && updateHour) {
+        endDate = calculateEndDate(classData.hour, classData.Date);
+    } else if (updateHour) {
+        endDate = calculateEndDate(classData.hour, currentDate);
+    } else if (updateDate) {
+        endDate = calculateEndDate(currentHour, classData.Date);
+    } else {
+        // Si no se actualiza ni fecha ni hora, mantener la fecha de fin actual
+        endDate = currentClass[0]?.endDate;
+    }
+
+    // Construir la consulta para la actualización
+    let query = "UPDATE classes SET ";
     const setValues = fields.map(field => `${field} = ?`).join(', ');
-    query += setValues + " WHERE idClasses = ?";
+    query += setValues + ", endDate = ? WHERE idClasses = ?";
 
+    // Construir los valores para la consulta
     const values = fields.map(field => classData[field]);
+    values.push(endDate);
     values.push(classId);
-    
-    connection.query(query, values, (err, result) => {
-        if (err) {
-            console.error("Error al actualizar la clase:", err);
-            callback(err, null);
-        } else {
-            console.log("Clase actualizada correctamente");
-            callback(null, result);
-        }
-        connection.end();
-    });
-}
 
-const deleteClass = (classId, callback) => {
-    const connection = dbConnect();
+    try {
+        const [result] = await connection.query(query, values);
+        return result;
+    } catch (err) {
+        throw err;
+    } finally {
+        await connection.end();
+    }
+};
+
+const getAllClassesOfMentor = async (idUser) => {
+    const connection = await dbConnect().promise();
+    try {
+        // Obtener todas las clases del mentor
+        const [classes] = await connection.query("SELECT * FROM classes WHERE Users_idCreator = ?", [idUser]);
+        
+        if (classes.length > 0) {
+            console.log("Clases obtenidas correctamente");
+
+            // Iterar sobre cada clase para obtener el nombre de la materia
+            for (let i = 0; i < classes.length; i++) {
+                const classItem = classes[i];
+                const [subjectResult] = await connection.query("SELECT Name FROM subjects WHERE idSubjects = ?", [classItem.Subjects_idSubjects]);
+                
+                if (subjectResult.length > 0) {
+                    // Reemplazar el ID de la materia con el nombre
+                    classItem.SubjectName = subjectResult[0].Name;
+                } else {
+                    classItem.SubjectName = "Materia no encontrada";
+                }
+            }
+
+            return classes;
+        } else {
+            console.log("No se encontró ninguna clase");
+            return null;
+        }
+    } catch (err) {
+        console.error("Error al obtener las clases:", err);
+        throw err;
+    } finally {
+        await connection.end();
+    }
+};
+
+
+
+
+const deleteClass = async (classId) => {
+    const connection = await dbConnect().promise();
 
     const query = "DELETE FROM classes WHERE idClasses = ?";
 
-    connection.query(query, [classId], (err, result) => {
-        if (err) {
-            console.error("Error al eliminar la clase:", err);
-            callback(err, null);
-        } else {
-            console.log("Clase eliminada correctamente");
-            callback(null, result);
-        }
-        connection.end();
-    });
+    try {
+        const [result] = await connection.query(query, [classId]);
+        return result;
+    } catch (err) {
+        throw err;
+    } finally {
+        await connection.end();
+    }
 }
 
-module.exports = { getAllClasses, getClassById, createClass, modifyClass, deleteClass };
+module.exports = { getAllClasses, getClassById, createClass, modifyClass, deleteClass, getAllClassesOfMentor };

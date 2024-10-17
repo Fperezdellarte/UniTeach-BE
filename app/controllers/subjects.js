@@ -1,31 +1,24 @@
 const { httpError } = require("../helpers/handleError");
 const { createSubject, getAllSubjects, modifySubject, deleteSubject, getSubjectById } = require('../models/subjectsModels');
 
-const getSubjects = async (req, res) =>{
+const getSubjects = async (req, res) => {
     try {
-        getAllSubjects((err, subjects) => {
-            if (err) {
-                httpError(res, err);
-            } else {
-                res.status(200).json({ subjects });
-            }
-        });
+        const subjects = await getAllSubjects();
+        res.status(200).json({ subjects });
     } catch (error) {
         httpError(res, error);
     }
 }
 
-const getSubject = async (req, res) =>{
+const getSubject = async (req, res) => {
     try {
         const subjectId = req.params.id;
-
-        getSubjectById(subjectId, (err, result) => {
-            if (err) {
-                httpError(res, err); 
-            } else {
-                res.status(200).json({ subject: result });
-            }
-        });
+        const result = await getSubjectById(subjectId);
+        if (result) {
+            res.status(200).json({ subject: result });
+        } else {
+            res.status(404).json({ message: "Materia no encontrada" });
+        }
     } catch (error) {
         httpError(res, error);
     }
@@ -34,47 +27,33 @@ const getSubject = async (req, res) =>{
 const createSubjectController = async (req, res) => {
     try {
         const subjectData = req.body;
-        
-        createSubject(subjectData, (err, result) => {
-            if (err) {
-                httpError(res, err);
-            } else {
-                res.status(201).json({ message: "Materia creada correctamente", subject: result });
-            }
-        });
+        const result = await createSubject(subjectData);
+        res.status(201).json({ message: "Materia creada correctamente", subject: result });
     } catch (error) {
         httpError(res, error);
     }
 }
 
-const updateSubject = async (req, res) =>{
+const updateSubject = async (req, res) => {
     try {
         const subjectId = req.params.id;
         const subjectData = req.body;
-
-        modifySubject(subjectId, subjectData, (err, result) => {
-            if (err) {
-                httpError(res, err); 
-            } else {
-                res.status(200).json({ message: "Materia actualizada correctamente", subject: result });
-            }
-        });
+        const result = await modifySubject(subjectId, subjectData);
+        res.status(200).json({ message: "Materia actualizada correctamente", subject: result });
     } catch (error) {
         httpError(res, error);
     }
 }
 
-const deleteSubjectController = async (req, res) =>{
+const deleteSubjectController = async (req, res) => {
     try {
         const subjectId = req.params.id;
-
-        deleteSubject(subjectId, (err, result) => {
-            if (err) {
-                httpError(res, err); 
-            } else {
-                res.status(200).json({ message: "Materia eliminada correctamente", subject: result });
-            }
-        });
+        const result = await deleteSubject(subjectId);
+        if (result.affectedRows > 0) {
+            res.status(200).json({ message: "Materia eliminada correctamente" });
+        } else {
+            res.status(404).json({ message: "Materia no encontrada" });
+        }
     } catch (error) {
         httpError(res, error);
     }
