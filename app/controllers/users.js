@@ -3,11 +3,11 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 require("dotenv").config();
 const { JWT_SECRET } = process.env;
-const { createUser, getAllUsers, modifyUser, deleteUser, getUserById } = require('../models/userModels'); // Importa la función createUser del modelo
+const { createUser, getAllUsers, modifyUser, deleteUser, getUserById, rateUser} = require('../models/userModels'); // Importa la función createUser del modelo
 const {storeToken, removeToken} = require ('../models/tokens')
 const {checkFieldsExistence} =require('../services/userService')
 const {dbConnect} = require ('../../config/mysql')
-const {uploadImageToImgur} = require ('../../config/imgurUplouder') 
+const {uploadImageToImgur} = require ('../../config/imgurUplouder')  
 
 const logout = async (req, res) => {
     try {
@@ -96,7 +96,7 @@ const getMentor= async (req, res) => {
                 Phone: user.Phone,
                 University: user.University,
                 Description: user.Description,
-                Opinion: user.Opinion,
+                Opinion: user.AverageOpinion,
                 Avatar_URL: user.Avatar_URL
             };
 
@@ -172,5 +172,26 @@ const deleteUserController = async (req, res) => {
     }
 };
 
+const ratingUser = async (req, res) => {
+    const userId = req.params.id; // Asume que el ID del usuario viene del token o sesión
+    const { rate } = req.body; // Asegúrate de que `rate` venga en el cuerpo de la solicitud
 
-module.exports = {getUsers,getMentor, getUser, createUserController, updateUser, deleteUserController, login, logout}
+    if (typeof rate !== "number" || rate < 0 || rate > 5) {
+        return res.status(400).json({ error: "La calificación debe ser un número entre 0 y 5." });
+    }
+
+    try {
+        const result = await rateUser(userId, rate); // Llama a la función que calcula y actualiza la calificación
+        res.json({ 
+            message: "Mentor calificado correctamente", 
+            average: result.newAverage // Devuelve el nuevo promedio calculado
+        });
+    } catch (error) {
+        console.error("Error al calificar mentor:", error);
+        res.status(500).json({ error: "No se pudo calificar" });
+    }
+};
+
+
+
+module.exports = {getUsers,getMentor, getUser, createUserController, updateUser, deleteUserController, login, logout, ratingUser}

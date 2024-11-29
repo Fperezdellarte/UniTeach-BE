@@ -1,5 +1,5 @@
 const express = require ('express')
-const { getUser,getMentor, getUsers, updateUser, deleteUserController, createUserController, login, logout} = require('../controllers/users')
+const { getUser,getMentor, getUsers, updateUser, deleteUserController, createUserController, login, logout, ratingUser} = require('../controllers/users')
 const {authentication} = require ('../middleware/authentication')
 const { imageLoad } = require('../middleware/multer')
 const router = express.Router()
@@ -11,6 +11,8 @@ router.post("/logout",authentication, logout)
 router.post("/login",login)
 
 router.post("/signup",imageLoad, createUserController)
+
+router.post("/rating/:id",authentication, ratingUser)
 
 router.post('/', createUserController)
 

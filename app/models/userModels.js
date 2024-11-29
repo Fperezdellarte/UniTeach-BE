@@ -137,6 +137,53 @@ const deleteUser = async (userId) => {
     }
 };
 
+const rateUser = async (userId, rate) => {
+    const connection = await dbConnect().promise();
+    const query = "SELECT Opinion, NumberOpinion FROM users WHERE idUser = ?";
+    const updateQuery = "UPDATE users SET Opinion = ?, NumberOpinion = ?, AverageOpinion = ? WHERE idUser = ?";
+
+    try {
+        // Consultar las opiniones existentes
+        const [results] = await connection.query(query, [userId]);
+
+        if (results.length > 0) {
+            console.log("Calificación encontrada");
+
+            const numberOpinion = results[0].NumberOpinion; // Número actual de opiniones
+            const Opinion = results[0].Opinion; // Suma acumulada de opiniones
+
+            // Calcular la nueva suma de opiniones y el número de opiniones
+            const newOpinionSum = Opinion + rate; // Suma acumulada con la nueva calificación
+            const newNumberOpinion = numberOpinion + 1; // Incrementar el contador de opiniones
+
+            // Calcular el nuevo promedio
+            const newAverage = newOpinionSum / newNumberOpinion;
+
+            // Actualizar en la base de datos
+            await connection.query(updateQuery, [newOpinionSum, newNumberOpinion, newAverage, userId]);
+
+            console.log("Calificación actualizada");
+            return { userId, newAverage };
+        } else {
+            console.log("Este usuario no tiene calificación previa. Agregando la primera calificación.");
+
+            // Insertar la primera calificación en caso de que no existan opiniones
+            const insertQuery = "UPDATE users SET Opinion = ?, NumberOpinion = ?, AverageOpinion = ? WHERE idUser = ?";
+            await connection.query(insertQuery, [rate, 1, rate, userId]);
+
+            return { userId, newAverage: rate }; // El promedio es igual a la primera calificación
+        }
+    } catch (err) {
+        console.error("Error al calificar usuario:", err);
+        throw err;
+    } finally {
+        await connection.end();
+    }
+};
 
 
-module.exports = { getAllUsers, getUserById, createUser, modifyUser, deleteUser };
+
+
+
+
+module.exports = { getAllUsers, getUserById, createUser, modifyUser, deleteUser, rateUser};
