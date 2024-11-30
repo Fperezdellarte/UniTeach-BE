@@ -41,7 +41,25 @@ const login = async (req, res) => {
                 
                 await storeToken(token, user.idUser);
 
-                res.status(200).json({ message: 'Bienvenid@ ' + user.Name, user, token });
+                // Crear un objeto `user` filtrado con solo los campos necesarios
+                const filteredUser = {
+                    idUser: user.idUser,
+                    Username: user.Username,
+                    Name: user.Name,
+                    Mail: user.Mail,
+                    Phone: user.Phone,
+                    TypeOfUser: user.TypeOfUser,
+                    University: user.University,
+                    Avatar_URL: user.Avatar_URL,
+                    Opinion: user.AverageOpinion,
+                    Description: user.Description,
+                };
+
+                res.status(200).json({
+                    message: 'Bienvenid@ ' + user.Name,
+                    user: filteredUser,
+                    token
+                });
             } else {
                 res.status(400).json({ message: "Incorrect username or password" });
             }
@@ -55,6 +73,7 @@ const login = async (req, res) => {
         res.status(500).json({ message: "Error interno al iniciar sesión" });
     }
 };
+
 
 const getUsers = async (req, res) =>{
     try {
