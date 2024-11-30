@@ -181,9 +181,38 @@ const rateUser = async (userId, rate) => {
     }
 };
 
+const updatePassword = async (email, hashedPassword) => {
+    const connection = await dbConnect().promise();
+    try {
+        // Verificar si el usuario existe
+        const [rows] = await connection.execute(
+            'SELECT COUNT(*) AS count FROM users WHERE Mail = ?',
+            [email]
+        );
+
+        if (rows[0].count === 0) {
+            throw new Error('No existe un usuario con ese correo.');
+        }
+
+        // Actualizar la contraseña
+        await connection.execute(
+            'UPDATE users SET Password = ? WHERE Mail = ?',
+            [hashedPassword, email]
+        );
+
+        return { message: 'Contraseña actualizada con éxito.' };
+    } catch (error) {
+        console.error('Error al actualizar la contraseña:', error);
+        throw error; // Re-lanzar el error para manejarlo en el controlador
+    } finally {
+        connection.end();
+    }
+};
 
 
 
 
 
-module.exports = { getAllUsers, getUserById, createUser, modifyUser, deleteUser, rateUser};
+
+
+module.exports = { getAllUsers, getUserById, createUser, modifyUser, deleteUser, rateUser ,updatePassword};

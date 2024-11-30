@@ -3,9 +3,10 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 require("dotenv").config();
 const { JWT_SECRET } = process.env;
-const { createUser, getAllUsers, modifyUser, deleteUser, getUserById, rateUser} = require('../models/userModels'); // Importa la función createUser del modelo
+const { createUser, getAllUsers, modifyUser, deleteUser, getUserById, rateUser, updatePassword} = require('../models/userModels'); // Importa la función createUser del modelo
 const {storeToken, removeToken} = require ('../models/tokens')
-const {checkFieldsExistence} =require('../services/userService')
+const {checkFieldsExistence, mail_rover} =require('../services/userService')
+const nodemailer = require('nodemailer');
 const {dbConnect} = require ('../../config/mysql')
 const {uploadImageToImgur} = require ('../../config/imgurUplouder')  
 
@@ -192,6 +193,66 @@ const ratingUser = async (req, res) => {
     }
 };
 
+const sendEmail = async (req, res) => {
+    const { email } = req.body;
+
+    try {
+        // Generar el token
+        const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: "1h" });
+        const resetLink = `https://tu-dominio.com/reset-password?token=${token}`;
+
+        // Configurar el transporte y enviar el correo
+        mail_rover((transporter) => {
+            transporter.sendMail(
+                {
+                    from: "Uniteach",
+                    to: email,
+                    subject: "Restablece tu contraseña",
+                    html: `<p>Haz clic en el siguiente enlace para restablecer tu contraseña:</p>
+                            <p>Si no fuiste tu ignora este correo</p>
+                            <a href="${resetLink}">${resetLink}</a>`,
+                },
+                (error, info) => {
+                    if (error) {
+                        console.error("Error al enviar el correo:", error);
+                        return res.status(500).send("Error al enviar el correo");
+                    }
+                    res.status(200).send("Correo enviado");
+                }
+            );
+        });
+    } catch (error) {
+        console.error("Error en el controlador:", error);
+        res.status(500).send("Error interno");
+    }
+};
+
+const resetPassword = async (req, res) => {
+    const { token, password } = req.body;
+
+    try {
+        // Verifica el token
+        const decoded = jwt.verify(token, JWT_SECRET);
+        const email = decoded.email;
+
+        // Hashea la nueva contraseña
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Actualiza la contraseña en la base de datos
+        const result = await updatePassword(email, hashedPassword);
+
+        res.status(200).json(result);
+    } catch (error) {
+        console.error('Error al restablecer contraseña:', error);
+        if (error.message === 'No existe un usuario con ese correo.') {
+            res.status(404).json({ message: error.message });
+        } else {
+            res.status(500).json({ message: 'Error al restablecer contraseña.' });
+        }
+    }
+};
 
 
-module.exports = {getUsers,getMentor, getUser, createUserController, updateUser, deleteUserController, login, logout, ratingUser}
+
+
+module.exports = {getUsers,getMentor, getUser, createUserController, updateUser, deleteUserController, login, logout, ratingUser, sendEmail, resetPassword}
