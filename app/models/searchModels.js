@@ -8,9 +8,10 @@ const searchMentors = async (subjectName, university) => {
   SELECT 
     u.idUser, 
     u.Name AS MentorName,
-    u.Opinion,
+    u.AverageOpinion AS Opinion,
     s.Name AS SubjectName,
     u.University AS MentorUniversity,
+    u.Avatar_URL,
     GROUP_CONCAT(CONCAT(c.hour, ', ', DATE_FORMAT(c.date, '%d-%m-%Y')) SEPARATOR '; ') AS ClassDetails
 FROM 
     users u
@@ -28,7 +29,7 @@ WHERE
     AND s.University = ?
     AND u.University = ?
 GROUP BY 
-    u.idUser, u.Name, u.Opinion, s.Name, u.University;
+    u.idUser, u.Name, u.AverageOpinion, s.Name, u.University, u.Avatar_URL ;
 
     `;
     const values = [`%${subjectName}%`, university, university];
