@@ -1,13 +1,16 @@
-const searchModels= require('../models/searchModels');
+const searchModels = require('../models/searchModels');
 
 const searchMentors = async (req, res) => {
     try {
-        const { subjectName, university } = req.query;
-        if (!subjectName || !university) {
-            return res.status(400).json({ error: 'Debe proporcionar el nombre de la materia y la universidad.' });
+        const { University, subjectName = [], Facultad = [] } = req.query;  // Asignación por defecto
+
+        // Validar que 'university' esté presente
+        if (!University) {
+            return res.status(400).json({ error: 'Debe proporcionar el nombre de la universidad.' });
         }
 
-        const results = await searchModels.searchMentors(subjectName, university);
+        // Llamar a la función que hace la búsqueda en la base de datos
+        const results = await searchModels.searchMentors(subjectName, Facultad, University);
         res.json(results);
     } catch (error) {
         console.error(error);

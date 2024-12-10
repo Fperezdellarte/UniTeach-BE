@@ -118,7 +118,7 @@ const modifyClass = async (classId, classData) => {
     }
 };
 
-const getAllClassesOfMentor = async (idUser) => {
+const getAllClassesOfMentor = async (idUser, subject) => {
     const connection = await dbConnect().promise();
     try {
         // Obtener todas las clases del mentor

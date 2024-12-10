@@ -15,7 +15,8 @@ const getClasses = async (req, res) => {
 const getClassesMentor = async (req, res) => {
     try {
         const userId = req.params.id;
-        const clases = await getAllClassesOfMentor(userId);
+        const subject = req.params.subjectsName;
+        const clases = await getAllClassesOfMentor(userId, subject);
         if (clases) {
             res.status(200).json({ clases });
         } else {
