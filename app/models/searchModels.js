@@ -10,6 +10,7 @@ const searchMentors = async (subjectName, Facultad, University) => {
         u.Name AS MentorName,
         u.AverageOpinion AS Opinion,
         s.Name AS SubjectName,
+        s.idSubjects AS IdMateria,
         s.Facultad AS Facultad,
         s.Id_Facultad AS IdFacultad,
         u.University AS MentorUniversity,
@@ -55,7 +56,7 @@ const searchMentors = async (subjectName, Facultad, University) => {
 
     query += `
     GROUP BY 
-        u.idUser, u.Name, u.AverageOpinion, s.Name, s.Facultad, s.Id_Facultad, u.University, u.Avatar_URL
+        u.idUser, u.Name, u.AverageOpinion, s.Name, s.idSubjects, s.Facultad, s.Id_Facultad, u.University, u.Avatar_URL
     ORDER BY 
         CASE 
             WHEN u.University = ? THEN 1

@@ -218,7 +218,7 @@ const sendEmail = async (req, res) => {
     try {
         // Generar el token
         const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: "1h" });
-        const resetLink = `https://tu-dominio.com/reset-password?token=${token}`;
+        const resetLink = `https://uniteach.netlify.app/reset-password/${token}`;
 
         // Configurar el transporte y enviar el correo
         mail_rover((transporter) => {
@@ -227,9 +227,83 @@ const sendEmail = async (req, res) => {
                     from: "Uniteach",
                     to: email,
                     subject: "Restablece tu contraseña",
-                    html: `<p>Haz clic en el siguiente enlace para restablecer tu contraseña:</p>
-                            <p>Si no fuiste tu ignora este correo</p>
-                            <a href="${resetLink}">${resetLink}</a>`,
+                    html: `<html>
+<head>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+    .email-container {
+      max-width: 600px;
+      margin: 20px auto;
+      background: #ffffff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    .header {
+      background-color:  #004aad;
+      padding: 20px;
+      text-align: center;
+      color: white;
+    }
+    .header img {
+      max-width: 150px;
+      margin-bottom: 10px;
+    }
+    .content {
+      padding: 20px;
+      text-align: center;
+    }
+    .content p {
+      font-size: 16px;
+      line-height: 1.5;
+      margin: 15px 0;
+    }
+    .content a {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color:  #004aad;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+    .content a:hover {
+      background-color:  #004aad;
+    }
+    .footer {
+      background-color:rgb(0, 0, 0);
+      padding: 10px;
+      text-align: center;
+      font-size: 12px;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <div class="email-container">
+    <div class="header">
+      <img src="https://i.imgur.com/wdO9gzQ.png" alt="Uniteach">
+    </div>
+    <div class="content">
+      <p></p>
+      <p>Haz clic en el siguiente enlace para restablecer tu contraseña:</p>
+      <a href="${resetLink}">Restablecer Contraseña</a>
+      <p>Si no solicitaste este cambio, puedes ignorar este correo.</p>
+    </div>
+    <div class="footer">
+      <p>&copy; 2024 Uniteach. Todos los derechos reservados.</p>
+    </div>
+  </div>
+</body>
+</html>
+`,
                 },
                 (error, info) => {
                     if (error) {
