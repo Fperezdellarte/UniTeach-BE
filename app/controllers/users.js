@@ -117,7 +117,7 @@ const getMentor = async (req, res) => {
   try {
     const userId = req.params.id;
     const user = await getUserById(userId);
-
+    const ratings = await getRatingsByMentor(userId);
     if (user) {
       const filteredUser = {
         idUser: user.idUser,
@@ -129,10 +129,15 @@ const getMentor = async (req, res) => {
         Description: user.Description,
         Opinion: user.AverageOpinion,
         Avatar_URL: user.Avatar_URL,
-        Materia: user.carrera_id,
+        carrera_id: user.carrera_id,
+        Carrera: user.careerName,
+        Rating: [null],
       };
+      if (ratings.length > 0) {
+        filteredUser.Rating = ratings;
+      }
 
-      res.json(filteredUser); // Devolver el usuario filtrado como JSON
+      res.json(filteredUser);
     } else {
       res.status(404).json({ error: "Usuario no encontrado" });
     }

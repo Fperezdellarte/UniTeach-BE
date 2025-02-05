@@ -51,23 +51,32 @@ const getAllUsers = async () => {
 
 const getUserById = async (userId) => {
   const connection = dbConnect().promise(); // Usamos el envoltorio de promesas
-  const query = "SELECT * FROM users WHERE idUser = ?";
+  const query = `
+    SELECT 
+        u.*, 
+        c.nombre AS careerName
+    FROM 
+        users u
+    LEFT JOIN 
+        carreras c ON u.carrera_id = c.id
+    WHERE 
+        u.idUser = ?;
+  `;
 
   try {
     const [results] = await connection.query(query, [userId]);
-
     if (results.length > 0) {
       console.log("Usuario obtenido correctamente");
-      return results[0]; // Devolver el primer resultado encontrado
+      return results[0];
     } else {
       console.log("No se encontró ningún usuario con el ID especificado");
       return null;
     }
   } catch (err) {
     console.error("Error al obtener el usuario:", err);
-    throw err; // Lanzar el error para que pueda ser manejado en otro lugar
+    throw err;
   } finally {
-    connection.end(); // Asegurar el cierre de la conexión
+    await connection.end();
   }
 };
 

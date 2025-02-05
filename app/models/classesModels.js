@@ -47,25 +47,30 @@ const getAllClasses = async () => {
   }
 };
 
-const getClassById = async (classId) => {
+const getClassById = async (userId, classId) => {
   const connection = await dbConnect().promise();
   const query = `
-        SELECT 
-            c.*, 
-            s.Name AS subjectName, 
-            u.Name AS creatorName
-        FROM 
-            classes c
-        JOIN 
-            subjects s ON c.Subjects_idSubjects = s.idSubjects
-        JOIN 
-            users u ON c.Users_idCreator = u.idUser
-        WHERE 
-            c.idClasses = ?
-    `;
+    SELECT 
+        c.*, 
+        s.Name AS subjectName, 
+        u.Name AS creatorName,
+        r.rating AS userRating,
+        r.comment AS userComment 
+    FROM 
+        classes c
+    JOIN 
+        subjects s ON c.Subjects_idSubjects = s.idSubjects
+    JOIN 
+        users u ON c.Users_idCreator = u.idUser
+    LEFT JOIN 
+        ratings r ON r.idMentor = c.Users_idCreator 
+                  AND r.idAlumno = ?
+    WHERE 
+        c.idClasses = ?
+  `;
+
   try {
-    const [results] = await connection.query(query, [classId]);
-    console.log("clase obtenida correctamente");
+    const [results] = await connection.query(query, [userId, classId]);
     return results.length > 0 ? results[0] : null;
   } catch (err) {
     throw err;
@@ -133,48 +138,40 @@ const modifyClass = async (classId, classData) => {
 
 const getAllClassesOfMentor = async (idUser, subject) => {
   const connection = await dbConnect().promise();
+
   try {
-    const [classes] = await connection.query(
-      "SELECT * FROM classes WHERE Users_idCreator = ?",
-      [idUser]
-    );
+    let query = `
+        SELECT 
+            c.*, 
+            s.Name AS SubjectName 
+        FROM classes c
+        LEFT JOIN subjects s 
+            ON c.Subjects_idSubjects = s.idSubjects
+        WHERE c.Users_idCreator = ? AND c.expired = 0
+    `;
 
-    if (classes.length > 0) {
-      console.log("Clases obtenidas correctamente");
+    const params = [idUser];
 
-      let activeClasses = [];
-      let totalClassesGiven = 0;
-
-      for (let i = 0; i < classes.length; i++) {
-        const classItem = classes[i];
-
-        const [subjectResult] = await connection.query(
-          "SELECT Name FROM subjects WHERE idSubjects = ?",
-          [classItem.Subjects_idSubjects]
-        );
-
-        if (subjectResult.length > 0) {
-          classItem.SubjectName = subjectResult[0].Name;
-        } else {
-          classItem.SubjectName = "Materia no encontrada";
-        }
-
-        const currentDate = new Date();
-        const endDate = new Date(classItem.endDate);
-
-        if (endDate >= currentDate) {
-          activeClasses.push(classItem);
-        }
-        totalClassesGiven++;
-      }
-      return {
-        activeClasses,
-        totalClassesGiven,
-      };
-    } else {
-      console.log("No se encontró ninguna clase");
-      return null;
+    if (subject) {
+      query += " AND c.Subjects_idSubjects = ?";
+      params.push(subject);
     }
+
+    const [activeClasses] = await connection.query(query, params);
+
+    const expiredQuery = `
+        SELECT COUNT(*) AS expiredClasses
+        FROM classes 
+        WHERE Users_idCreator = ? AND expired = 1
+    `;
+    const [[{ expiredClasses }]] = await connection.query(expiredQuery, [
+      idUser,
+    ]);
+
+    return {
+      activeClasses,
+      totalClasses: expiredClasses,
+    };
   } catch (err) {
     console.error("Error al obtener las clases:", err);
     throw err;
