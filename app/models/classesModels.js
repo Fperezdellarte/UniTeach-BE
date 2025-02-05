@@ -134,7 +134,6 @@ const modifyClass = async (classId, classData) => {
 const getAllClassesOfMentor = async (idUser, subject) => {
   const connection = await dbConnect().promise();
   try {
-    // Obtener todas las clases del mentor
     const [classes] = await connection.query(
       "SELECT * FROM classes WHERE Users_idCreator = ?",
       [idUser]
@@ -143,23 +142,35 @@ const getAllClassesOfMentor = async (idUser, subject) => {
     if (classes.length > 0) {
       console.log("Clases obtenidas correctamente");
 
-      // Iterar sobre cada clase para obtener el nombre de la materia
+      let activeClasses = [];
+      let totalClassesGiven = 0;
+
       for (let i = 0; i < classes.length; i++) {
         const classItem = classes[i];
+
         const [subjectResult] = await connection.query(
           "SELECT Name FROM subjects WHERE idSubjects = ?",
           [classItem.Subjects_idSubjects]
         );
 
         if (subjectResult.length > 0) {
-          // Reemplazar el ID de la materia con el nombre
           classItem.SubjectName = subjectResult[0].Name;
         } else {
           classItem.SubjectName = "Materia no encontrada";
         }
-      }
 
-      return classes;
+        const currentDate = new Date();
+        const endDate = new Date(classItem.endDate);
+
+        if (endDate >= currentDate) {
+          activeClasses.push(classItem);
+        }
+        totalClassesGiven++;
+      }
+      return {
+        activeClasses,
+        totalClassesGiven,
+      };
     } else {
       console.log("No se encontró ninguna clase");
       return null;
