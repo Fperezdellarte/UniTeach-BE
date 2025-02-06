@@ -25,7 +25,7 @@ router.post("/login", login);
 
 router.post("/signup", imageLoad, createUserController);
 
-router.post("/rating/:id", authentication, ratingUser);
+router.post("/rating", authentication, ratingUser);
 
 router.get("/rating/:id", authentication, getAllRating);
 

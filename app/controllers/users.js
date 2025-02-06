@@ -215,7 +215,7 @@ const deleteUserController = async (req, res) => {
 };
 
 const ratingUser = async (req, res) => {
-  const userId = req.params.id;
+  const userId = req.user.id;
   const { rate } = req.body;
 
   if (typeof rate.rating !== "number" || rate.rating < 0 || rate.rating > 5) {
