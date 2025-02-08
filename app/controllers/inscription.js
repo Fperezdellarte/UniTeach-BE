@@ -9,15 +9,37 @@ const {
 
 const createInscriptionController = async (req, res) => {
   const userId = req.user.id;
-  const idClass = req.body.idClass;
+  const { idClass } = req.body;
+
+  if (!idClass) {
+    return httpError(res, new Error("Falta el parámetro idClass."), 400);
+  }
+  if (!userId) {
+    return httpError(res, new Error("Falta el parámetro userId."), 400);
+  }
   try {
     const result = await createInscription(idClass, userId);
+
     res.status(201).json({
       message: "Inscripción creada correctamente",
       inscription: result,
     });
   } catch (error) {
-    httpError(res, error);
+    console.error("Error en createInscriptionController:", error);
+
+    if (error.message === "El usuario ya está inscrito a esta clase.") {
+      return httpError(res, error, 409);
+    } else if (error.message === "El usuario especificado no existe.") {
+      return httpError(res, error, 404);
+    } else if (error.message === "La clase especificada no existe.") {
+      return httpError(res, error, 404);
+    } else {
+      return httpError(
+        res,
+        new Error("Error interno del servidor al crear la inscripción."),
+        500
+      );
+    }
   }
 };
 

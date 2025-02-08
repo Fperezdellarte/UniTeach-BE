@@ -30,27 +30,37 @@ const classExists = async (classId) => {
 };
 
 const createInscription = async (classId, userId) => {
-  // Verificar existencia de usuario y clase
-  const userExistsFlag = await userExists(userId);
-  const classExistsFlag = await classExists(classId);
-
-  if (!userExistsFlag) {
-    throw new Error("El usuario especificado no existe.");
-  }
-
-  if (!classExistsFlag) {
-    throw new Error("La clase especificada no existe.");
-  }
-
   const connection = await dbConnect().promise();
+
   try {
-    const query =
+    const userExistsFlag = await userExists(userId);
+    const classExistsFlag = await classExists(classId);
+
+    if (!userExistsFlag) {
+      throw new Error("El usuario especificado no existe.");
+    }
+
+    if (!classExistsFlag) {
+      throw new Error("La clase especificada no existe.");
+    }
+
+    const checkQuery =
+      "SELECT * FROM inscription WHERE Users_idUser = ? AND Classes_idClasses = ?";
+    const [existingInscriptions] = await connection.query(checkQuery, [
+      userId,
+      classId,
+    ]);
+
+    if (existingInscriptions.length > 0) {
+      throw new Error("El usuario ya está inscrito a esta clase.");
+    }
+    const insertQuery =
       "INSERT INTO inscription (Users_idUser, Classes_idClasses) VALUES (?, ?)";
-    const [result] = await connection.query(query, [userId, classId]);
+    const [result] = await connection.query(insertQuery, [userId, classId]);
     console.log("Inscripción creada correctamente");
     return result;
   } catch (err) {
-    console.error("Error al crear la inscripción:", err);
+    console.error("Error al crear/verificar la inscripción:", err);
     throw err;
   } finally {
     await connection.end();
