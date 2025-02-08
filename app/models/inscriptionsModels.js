@@ -29,12 +29,10 @@ const classExists = async (classId) => {
   }
 };
 
-const createInscription = async (inscriptionData) => {
-  const { Users_idUser, Classes_idClasses } = inscriptionData;
-
+const createInscription = async (classId, userId) => {
   // Verificar existencia de usuario y clase
-  const userExistsFlag = await userExists(Users_idUser);
-  const classExistsFlag = await classExists(Classes_idClasses);
+  const userExistsFlag = await userExists(userId);
+  const classExistsFlag = await classExists(classId);
 
   if (!userExistsFlag) {
     throw new Error("El usuario especificado no existe.");
@@ -48,10 +46,7 @@ const createInscription = async (inscriptionData) => {
   try {
     const query =
       "INSERT INTO inscription (Users_idUser, Classes_idClasses) VALUES (?, ?)";
-    const [result] = await connection.query(query, [
-      Users_idUser,
-      Classes_idClasses,
-    ]);
+    const [result] = await connection.query(query, [userId, classId]);
     console.log("Inscripción creada correctamente");
     return result;
   } catch (err) {

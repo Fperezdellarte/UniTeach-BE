@@ -8,15 +8,14 @@ const {
 } = require("../models/inscriptionsModels");
 
 const createInscriptionController = async (req, res) => {
+  const userId = req.user.id;
+  const idClass = req.body.idClass;
   try {
-    const inscriptionData = req.body;
-    const result = await createInscription(inscriptionData);
-    res
-      .status(201)
-      .json({
-        message: "Inscripción creada correctamente",
-        inscription: result,
-      });
+    const result = await createInscription(idClass, userId);
+    res.status(201).json({
+      message: "Inscripción creada correctamente",
+      inscription: result,
+    });
   } catch (error) {
     httpError(res, error);
   }
@@ -63,12 +62,10 @@ const deleteInscriptionController = async (req, res) => {
   try {
     const inscriptionId = req.params.id;
     const result = await deleteInscription(inscriptionId);
-    res
-      .status(200)
-      .json({
-        message: "Inscripción eliminada correctamente",
-        inscription: result,
-      });
+    res.status(200).json({
+      message: "Inscripción eliminada correctamente",
+      inscription: result,
+    });
   } catch (error) {
     httpError(res, error);
   }
