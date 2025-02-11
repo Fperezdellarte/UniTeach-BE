@@ -1,6 +1,9 @@
-const httpError = (res, err) => {
-    console.error("Error:", err); // Imprime el error en la consola para depuración
-    res.status(500).json({ error: "Algo ocurrió" }); // Envía una respuesta de error al cliente con el código de estado 500
+const httpError = (res, error, statusCode = 500) => {
+  const message = typeof error === "string" ? error : error.message;
+  console.log(message);
+  res
+    .status(statusCode)
+    .json({ message: message || "Error interno del servidor" });
 };
 
 module.exports = { httpError };

@@ -1,10 +1,10 @@
-const mysql = require('mysql2');
-const { dbConnect } = require('../../config/mysql'); // Asegúrate de tener configurado el archivo de conexión en config/mysql.js
+const mysql = require("mysql2");
+const { dbConnect } = require("../../config/mysql"); // Asegúrate de tener configurado el archivo de conexión en config/mysql.js
 
 const searchMentors = async (subjectName, Facultad, University) => {
-    const connection = dbConnect().promise();
+  const connection = dbConnect().promise();
 
-    let query = `
+  let query = `
     SELECT 
         u.idUser, 
         u.Name AS MentorName,
@@ -28,57 +28,51 @@ const searchMentors = async (subjectName, Facultad, University) => {
                  AND c.expired = FALSE
     WHERE 
         u.TypeOfUser IN ('MENTOR', 'AMBOS')
-        AND s.Name LIKE ?
+        AND u.University = ?
     `;
 
-    let values = [`%${subjectName}%`];
+  let values = [University];
 
-    // Si Facultad es proporcionado, añadirlo a la consulta
-    if (Facultad) {
-        query += ' AND s.Facultad IN (?)';
-        values.push(Facultad);
-    } else {
-        // Si no se pasa Facultad, se hace una consulta adicional para obtenerla
-        const query2 = "SELECT Facultad FROM subjects WHERE Name = ?";
-        try {
-            const [facultadResult] = await connection.query(query2, [subjectName]);
-            // Asignamos el valor de Facultad si la consulta lo devuelve
-            if (facultadResult.length > 0) {
-                Facultad = facultadResult[0].Facultad;
-                query += ' AND s.Facultad IN (?)';
-                values.push(Facultad);
-            }
-        } catch (err) {
-            console.error('Error al obtener Facultad:', err);
-            throw err;
-        }
+  // Filtro por materia (opcional)
+  if (subjectName) {
+    query += " AND s.Name LIKE ?";
+    values.push(`%${subjectName}%`);
+  }
+
+  // Lógica de facultad
+  if (Facultad) {
+    query += " AND s.Facultad = ?";
+    values.push(Facultad);
+  } else if (subjectName) {
+    // Obtener facultad de la materia si no se proporcionó
+    const [facultadResult] = await connection.query(
+      "SELECT Facultad FROM subjects WHERE Name LIKE ? LIMIT 1",
+      [`%${subjectName}%`]
+    );
+    if (facultadResult.length > 0) {
+      query += " AND s.Facultad = ?";
+      values.push(facultadResult[0].Facultad);
     }
+  }
 
-    query += `
+  query += `
     GROUP BY 
         u.idUser, u.Name, u.AverageOpinion, s.Name, s.idSubjects, s.Facultad, s.Id_Facultad, u.University, u.Avatar_URL
     ORDER BY 
-        CASE 
-            WHEN u.University = ? THEN 1
-            ELSE 2
-        END,
         u.AverageOpinion DESC;
     `;
 
-    values.push(University);
-
-    try {
-        const [rows] = await connection.query(query, values);
-        console.log("Mentores obtenidos correctamente");
-        return rows;
-    } catch (err) {
-        console.error("Error al buscar mentores:", err);
-        throw err; // Lanza el error para manejo en el controlador
-    } finally {
-        connection.end(); // Asegura que la conexión se cierre
-    }
+  try {
+    const [rows] = await connection.query(query, values);
+    return rows;
+  } catch (err) {
+    console.error("Error al buscar mentores:", err);
+    throw err;
+  } finally {
+    connection.end();
+  }
 };
 
 module.exports = {
-    searchMentors,
+  searchMentors,
 };

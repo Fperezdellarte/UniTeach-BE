@@ -1,34 +1,46 @@
-const express = require ('express')
-const { getUser,getMentor, getUsers, updateUser, deleteUserController, createUserController, login, logout, ratingUser, sendEmail, resetPassword} = require('../controllers/users')
-const {authentication} = require ('../middleware/authentication')
-const { imageLoad } = require('../middleware/multer')
-const router = express.Router()
+const express = require("express");
+const {
+  getUser,
+  getMentor,
+  getUsers,
+  updateUser,
+  deleteUserController,
+  createUserController,
+  login,
+  logout,
+  ratingUser,
+  sendEmail,
+  resetPassword,
+  getAllRating,
+} = require("../controllers/users");
+const { authentication } = require("../middleware/authentication");
+const { imageLoad } = require("../middleware/multer");
+const router = express.Router();
 
-router.get('/', getUsers)
+router.get("/", getUsers);
 
-router.post("/logout",authentication, logout)
+router.post("/logout", authentication, logout);
 
-router.post("/login",login)
+router.post("/login", login);
 
-router.post("/signup",imageLoad, createUserController)
+router.post("/signup", imageLoad, createUserController);
 
-router.post("/rating/:id",authentication, ratingUser)
+router.post("/rating", authentication, ratingUser);
 
-router.post('/', createUserController)
+router.get("/rating/:id", authentication, getAllRating);
 
-router.post('/sendEmail', sendEmail);
+router.post("/", createUserController);
 
-router.post('/reset-password', resetPassword);
+router.post("/sendEmail", sendEmail);
 
-router.get('/:id',authentication, getUser)
+router.post("/reset-password", resetPassword);
 
-router.get('/mentor/:id', authentication ,getMentor)
+router.get("/:id", authentication, getUser);
 
-router.patch('/:id',authentication, imageLoad, updateUser)
+router.get("/mentor/:id", authentication, getMentor);
 
-router.delete('/:id', deleteUserController)
+router.patch("/:id", authentication, imageLoad, updateUser);
 
+router.delete("/:id", deleteUserController);
 
-
-
-module.exports = router
+module.exports = router;
