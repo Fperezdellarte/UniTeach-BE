@@ -18,6 +18,7 @@ const { checkFieldsExistence, mail_rover } = require("../services/userService");
 const nodemailer = require("nodemailer");
 const { dbConnect } = require("../../config/mysql");
 const { uploadImageToImgur } = require("../../config/imgurUplouder");
+const resetPasswordTemplate = require("../lib/resetPasswordTemplate");
 
 const logout = async (req, res) => {
   try {
@@ -255,100 +256,21 @@ const sendEmail = async (req, res) => {
     });
     const resetLink = `https://uniteach.netlify.app/reset-password/${token}`;
 
-    // Configurar el transporte y enviar el correo
-    mail_rover((transporter) => {
-      transporter.sendMail(
-        {
-          from: "Uniteach",
+    mail_rover(async (transporter) => {
+      try {
+        await transporter.sendMail({
+          from: process.env.EMAIL_USER,
           to: email,
-          subject: "Restablece tu contraseña",
-          html: `<html>
-<head>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f9f9f9;
-      color: #333;
-      margin: 0;
-      padding: 0;
-    }
-    .email-container {
-      max-width: 600px;
-      margin: 20px auto;
-      background: #ffffff;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    }
-    .header {
-      background-color:  #004aad;
-      padding: 20px;
-      text-align: center;
-      color: white;
-    }
-    .header img {
-      max-width: 150px;
-      margin-bottom: 10px;
-    }
-    .content {
-      padding: 20px;
-      text-align: center;
-    }
-    .content p {
-      font-size: 16px;
-      line-height: 1.5;
-      margin: 15px 0;
-    }
-    .content a {
-      display: inline-block;
-      margin-top: 20px;
-      padding: 10px 20px;
-      background-color:  #004aad;
-      color: white;
-      text-decoration: none;
-      border-radius: 5px;
-      font-size: 16px;
-    }
-    .content a:hover {
-      background-color:  #004aad;
-    }
-    .footer {
-      background-color:rgb(0, 0, 0);
-      padding: 10px;
-      text-align: center;
-      font-size: 12px;
-      color: #888;
-    }
-  </style>
-</head>
-<body>
-  <div class="email-container">
-    <div class="header">
-      <img src="https://i.imgur.com/wdO9gzQ.png" alt="Uniteach">
-    </div>
-    <div class="content">
-      <p></p>
-      <p>Haz clic en el siguiente enlace para restablecer tu contraseña:</p>
-      <a href="${resetLink}">Restablecer Contraseña</a>
-      <p>Si no solicitaste este cambio, puedes ignorar este correo.</p>
-    </div>
-    <div class="footer">
-      <p>&copy; 2024 Uniteach. Todos los derechos reservados.</p>
-    </div>
-  </div>
-</body>
-</html>
-`,
-        },
-        (error, info) => {
-          if (error) {
-            console.error("Error al enviar el correo:", error);
-            return res.status(500).send("Error al enviar el correo");
-          }
-          res.status(200).send("Correo enviado");
-        }
-      );
+          ssubject: "Restablece tu contraseña",
+          html: resetPasswordTemplate(resetLink),
+        });
+        console.log("Correo enviado con éxito");
+      } catch (error) {
+        console.error("Error al enviar:", error);
+      }
     });
+
+    res.status(200).json({ message: "Correo enviado con éxito" });
   } catch (error) {
     console.error("Error en el controlador:", error);
     res.status(500).send("Error interno");
