@@ -182,7 +182,7 @@ const createUserController = async (req, res) => {
 };
 
 const updateUser = async (req, res) => {
-  const userId = req.params.id;
+  const userId = req.user.id;
   const userData = req.body;
   const imageFile = req.file;
 

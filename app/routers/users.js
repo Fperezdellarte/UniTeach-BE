@@ -39,7 +39,7 @@ router.get("/:id", authentication, getUser);
 
 router.get("/mentor/:id", authentication, getMentor);
 
-router.patch("/:id", authentication, imageLoad, updateUser);
+router.patch("/", authentication, imageLoad, updateUser);
 
 router.delete("/:id", deleteUserController);
 
