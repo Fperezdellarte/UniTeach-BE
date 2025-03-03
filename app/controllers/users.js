@@ -254,7 +254,7 @@ const sendEmail = async (req, res) => {
     const token = jwt.sign({ email }, process.env.JWT_SECRET, {
       expiresIn: "1h",
     });
-    const resetLink = `https://uniteach.netlify.app/reset-password/${token}`;
+    const resetLink = `https://uniteach.netlify.app/auth/reset-password/${token}`;
 
     mail_rover(async (transporter) => {
       try {
